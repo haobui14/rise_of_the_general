@@ -1,0 +1,13 @@
+services:
+  mongodb:
+    image: mongo:7.0
+    container_name: rotg-mongodb
+    ports:
+      - '27018:27017'
+    volumes:
+      - mongodb_data:/data/db
+    environment:
+      MONGO_INITDB_DATABASE: rise_of_the_general
+
+volumes:
+  mongodb_data:
