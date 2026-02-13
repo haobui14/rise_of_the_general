@@ -1,6 +1,6 @@
 import { useAuthStore } from '@/stores/authStore';
 
-const BASE = '/api';
+const BASE = import.meta.env.VITE_API_URL || '/api';
 
 export async function fetchApi<T>(path: string, opts: RequestInit = {}): Promise<T> {
   const token = useAuthStore.getState().token;

@@ -201,35 +201,77 @@ async function seed() {
   ];
 
   for (const t of templatesData) {
-    await BattleTemplate.findOneAndUpdate(
-      { name: t.name },
-      { $setOnInsert: t },
-      { upsert: true },
-    );
+    await BattleTemplate.findOneAndUpdate({ name: t.name }, { $setOnInsert: t }, { upsert: true });
     console.log(`  Template: ${t.name}`);
   }
 
   // 6. Items
   console.log('Seeding items...');
   const itemsData = [
-    { name: 'Iron Sword', type: 'weapon' as const, rarity: 'common' as const, statBonus: { strength: 3 } },
-    { name: 'Wooden Shield', type: 'armor' as const, rarity: 'common' as const, statBonus: { defense: 3 } },
-    { name: 'Bronze Spear', type: 'weapon' as const, rarity: 'common' as const, statBonus: { strength: 4 } },
-    { name: 'Leather Armor', type: 'armor' as const, rarity: 'common' as const, statBonus: { defense: 4 } },
-    { name: 'Steel Blade', type: 'weapon' as const, rarity: 'rare' as const, statBonus: { strength: 7, strategy: 2 } },
-    { name: 'Chain Mail', type: 'armor' as const, rarity: 'rare' as const, statBonus: { defense: 7, strategy: 2 } },
-    { name: 'War Halberd', type: 'weapon' as const, rarity: 'rare' as const, statBonus: { strength: 8, leadership: 3 } },
-    { name: 'Dragon Scale Armor', type: 'armor' as const, rarity: 'epic' as const, statBonus: { defense: 12, strategy: 5 } },
-    { name: 'Sky Piercer', type: 'weapon' as const, rarity: 'epic' as const, statBonus: { strength: 15, leadership: 5 } },
-    { name: 'Heavenly Robes', type: 'armor' as const, rarity: 'epic' as const, statBonus: { defense: 10, strategy: 8, leadership: 5 } },
+    {
+      name: 'Iron Sword',
+      type: 'weapon' as const,
+      rarity: 'common' as const,
+      statBonus: { strength: 3 },
+    },
+    {
+      name: 'Wooden Shield',
+      type: 'armor' as const,
+      rarity: 'common' as const,
+      statBonus: { defense: 3 },
+    },
+    {
+      name: 'Bronze Spear',
+      type: 'weapon' as const,
+      rarity: 'common' as const,
+      statBonus: { strength: 4 },
+    },
+    {
+      name: 'Leather Armor',
+      type: 'armor' as const,
+      rarity: 'common' as const,
+      statBonus: { defense: 4 },
+    },
+    {
+      name: 'Steel Blade',
+      type: 'weapon' as const,
+      rarity: 'rare' as const,
+      statBonus: { strength: 7, strategy: 2 },
+    },
+    {
+      name: 'Chain Mail',
+      type: 'armor' as const,
+      rarity: 'rare' as const,
+      statBonus: { defense: 7, strategy: 2 },
+    },
+    {
+      name: 'War Halberd',
+      type: 'weapon' as const,
+      rarity: 'rare' as const,
+      statBonus: { strength: 8, leadership: 3 },
+    },
+    {
+      name: 'Dragon Scale Armor',
+      type: 'armor' as const,
+      rarity: 'epic' as const,
+      statBonus: { defense: 12, strategy: 5 },
+    },
+    {
+      name: 'Sky Piercer',
+      type: 'weapon' as const,
+      rarity: 'epic' as const,
+      statBonus: { strength: 15, leadership: 5 },
+    },
+    {
+      name: 'Heavenly Robes',
+      type: 'armor' as const,
+      rarity: 'epic' as const,
+      statBonus: { defense: 10, strategy: 8, leadership: 5 },
+    },
   ];
 
   for (const item of itemsData) {
-    await Item.findOneAndUpdate(
-      { name: item.name },
-      { $setOnInsert: item },
-      { upsert: true },
-    );
+    await Item.findOneAndUpdate({ name: item.name }, { $setOnInsert: item }, { upsert: true });
     console.log(`  Item: ${item.name}`);
   }
 
@@ -241,33 +283,164 @@ async function seed() {
 
   const generalsData = [
     // === WEI (Cao Cao's forces) ===
-    { name: 'Xiahou Dun', title: 'The One-Eyed Warrior', factionId: factionWei!._id, rarity: 'uncommon' as const, requiredRankTier: 2, requiredRelationship: 20, stats: { strength: 30, defense: 25, strategy: 15, speed: 20, leadership: 20 }, battleBonus: { powerMultiplier: 1.08 } },
-    { name: 'Xu Chu', title: 'The Tiger Fool', factionId: factionWei!._id, rarity: 'uncommon' as const, requiredRankTier: 2, requiredRelationship: 25, stats: { strength: 35, defense: 30, strategy: 8, speed: 15, leadership: 10 }, battleBonus: { powerMultiplier: 1.10 } },
-    { name: 'Cao Ren', title: 'Defender of Fan Castle', factionId: factionWei!._id, rarity: 'rare' as const, requiredRankTier: 4, requiredRelationship: 50, stats: { strength: 22, defense: 40, strategy: 25, speed: 18, leadership: 30 }, battleBonus: { powerMultiplier: 1.15 } },
-    { name: 'Zhang Liao', title: 'Terror of Hefei', factionId: factionWei!._id, rarity: 'rare' as const, requiredRankTier: 4, requiredRelationship: 60, stats: { strength: 35, defense: 28, strategy: 30, speed: 28, leadership: 35 }, battleBonus: { powerMultiplier: 1.18 } },
-    { name: 'Sima Yi', title: 'The Hidden Dragon', factionId: factionWei!._id, rarity: 'legendary' as const, requiredRankTier: 6, requiredRelationship: 100, stats: { strength: 15, defense: 25, strategy: 50, speed: 20, leadership: 45 }, battleBonus: { powerMultiplier: 1.30 } },
+    {
+      name: 'Xiahou Dun',
+      title: 'The One-Eyed Warrior',
+      factionId: factionWei!._id,
+      rarity: 'uncommon' as const,
+      requiredRankTier: 2,
+      requiredRelationship: 20,
+      stats: { strength: 30, defense: 25, strategy: 15, speed: 20, leadership: 20 },
+      battleBonus: { powerMultiplier: 1.08 },
+    },
+    {
+      name: 'Xu Chu',
+      title: 'The Tiger Fool',
+      factionId: factionWei!._id,
+      rarity: 'uncommon' as const,
+      requiredRankTier: 2,
+      requiredRelationship: 25,
+      stats: { strength: 35, defense: 30, strategy: 8, speed: 15, leadership: 10 },
+      battleBonus: { powerMultiplier: 1.1 },
+    },
+    {
+      name: 'Cao Ren',
+      title: 'Defender of Fan Castle',
+      factionId: factionWei!._id,
+      rarity: 'rare' as const,
+      requiredRankTier: 4,
+      requiredRelationship: 50,
+      stats: { strength: 22, defense: 40, strategy: 25, speed: 18, leadership: 30 },
+      battleBonus: { powerMultiplier: 1.15 },
+    },
+    {
+      name: 'Zhang Liao',
+      title: 'Terror of Hefei',
+      factionId: factionWei!._id,
+      rarity: 'rare' as const,
+      requiredRankTier: 4,
+      requiredRelationship: 60,
+      stats: { strength: 35, defense: 28, strategy: 30, speed: 28, leadership: 35 },
+      battleBonus: { powerMultiplier: 1.18 },
+    },
+    {
+      name: 'Sima Yi',
+      title: 'The Hidden Dragon',
+      factionId: factionWei!._id,
+      rarity: 'legendary' as const,
+      requiredRankTier: 6,
+      requiredRelationship: 100,
+      stats: { strength: 15, defense: 25, strategy: 50, speed: 20, leadership: 45 },
+      battleBonus: { powerMultiplier: 1.3 },
+    },
 
     // === SHU (Liu Bei's forces) ===
-    { name: 'Zhao Yun', title: 'The Dragon of Changban', factionId: factionShu!._id, rarity: 'uncommon' as const, requiredRankTier: 2, requiredRelationship: 15, stats: { strength: 30, defense: 28, strategy: 20, speed: 30, leadership: 22 }, battleBonus: { powerMultiplier: 1.10 } },
-    { name: 'Huang Zhong', title: 'The Veteran Archer', factionId: factionShu!._id, rarity: 'uncommon' as const, requiredRankTier: 3, requiredRelationship: 30, stats: { strength: 32, defense: 20, strategy: 18, speed: 15, leadership: 18 }, battleBonus: { powerMultiplier: 1.08 } },
-    { name: 'Ma Chao', title: 'The Splendid Stallion', factionId: factionShu!._id, rarity: 'rare' as const, requiredRankTier: 4, requiredRelationship: 55, stats: { strength: 38, defense: 22, strategy: 15, speed: 35, leadership: 25 }, battleBonus: { powerMultiplier: 1.15 } },
-    { name: 'Zhang Fei', title: 'The Unbreakable', factionId: factionShu!._id, rarity: 'rare' as const, requiredRankTier: 5, requiredRelationship: 70, stats: { strength: 42, defense: 30, strategy: 10, speed: 25, leadership: 28 }, battleBonus: { powerMultiplier: 1.20 } },
-    { name: 'Guan Yu', title: 'God of War', factionId: factionShu!._id, rarity: 'legendary' as const, requiredRankTier: 6, requiredRelationship: 100, stats: { strength: 45, defense: 35, strategy: 25, speed: 22, leadership: 40 }, battleBonus: { powerMultiplier: 1.30 } },
+    {
+      name: 'Zhao Yun',
+      title: 'The Dragon of Changban',
+      factionId: factionShu!._id,
+      rarity: 'uncommon' as const,
+      requiredRankTier: 2,
+      requiredRelationship: 15,
+      stats: { strength: 30, defense: 28, strategy: 20, speed: 30, leadership: 22 },
+      battleBonus: { powerMultiplier: 1.1 },
+    },
+    {
+      name: 'Huang Zhong',
+      title: 'The Veteran Archer',
+      factionId: factionShu!._id,
+      rarity: 'uncommon' as const,
+      requiredRankTier: 3,
+      requiredRelationship: 30,
+      stats: { strength: 32, defense: 20, strategy: 18, speed: 15, leadership: 18 },
+      battleBonus: { powerMultiplier: 1.08 },
+    },
+    {
+      name: 'Ma Chao',
+      title: 'The Splendid Stallion',
+      factionId: factionShu!._id,
+      rarity: 'rare' as const,
+      requiredRankTier: 4,
+      requiredRelationship: 55,
+      stats: { strength: 38, defense: 22, strategy: 15, speed: 35, leadership: 25 },
+      battleBonus: { powerMultiplier: 1.15 },
+    },
+    {
+      name: 'Zhang Fei',
+      title: 'The Unbreakable',
+      factionId: factionShu!._id,
+      rarity: 'rare' as const,
+      requiredRankTier: 5,
+      requiredRelationship: 70,
+      stats: { strength: 42, defense: 30, strategy: 10, speed: 25, leadership: 28 },
+      battleBonus: { powerMultiplier: 1.2 },
+    },
+    {
+      name: 'Guan Yu',
+      title: 'God of War',
+      factionId: factionShu!._id,
+      rarity: 'legendary' as const,
+      requiredRankTier: 6,
+      requiredRelationship: 100,
+      stats: { strength: 45, defense: 35, strategy: 25, speed: 22, leadership: 40 },
+      battleBonus: { powerMultiplier: 1.3 },
+    },
 
     // === WU (Sun Quan's forces) ===
-    { name: 'Taishi Ci', title: 'The Duellist', factionId: factionWu!._id, rarity: 'uncommon' as const, requiredRankTier: 2, requiredRelationship: 20, stats: { strength: 32, defense: 22, strategy: 15, speed: 28, leadership: 15 }, battleBonus: { powerMultiplier: 1.08 } },
-    { name: 'Gan Ning', title: 'The Pirate King', factionId: factionWu!._id, rarity: 'uncommon' as const, requiredRankTier: 3, requiredRelationship: 30, stats: { strength: 35, defense: 18, strategy: 12, speed: 32, leadership: 18 }, battleBonus: { powerMultiplier: 1.10 } },
-    { name: 'Lu Meng', title: 'The Scholar General', factionId: factionWu!._id, rarity: 'rare' as const, requiredRankTier: 4, requiredRelationship: 55, stats: { strength: 25, defense: 28, strategy: 38, speed: 22, leadership: 32 }, battleBonus: { powerMultiplier: 1.15 } },
-    { name: 'Lu Xun', title: 'The Young Strategist', factionId: factionWu!._id, rarity: 'rare' as const, requiredRankTier: 5, requiredRelationship: 65, stats: { strength: 18, defense: 25, strategy: 42, speed: 25, leadership: 35 }, battleBonus: { powerMultiplier: 1.18 } },
-    { name: 'Zhou Yu', title: 'The Red Cliffs Commander', factionId: factionWu!._id, rarity: 'legendary' as const, requiredRankTier: 6, requiredRelationship: 100, stats: { strength: 20, defense: 28, strategy: 48, speed: 25, leadership: 42 }, battleBonus: { powerMultiplier: 1.30 } },
+    {
+      name: 'Taishi Ci',
+      title: 'The Duellist',
+      factionId: factionWu!._id,
+      rarity: 'uncommon' as const,
+      requiredRankTier: 2,
+      requiredRelationship: 20,
+      stats: { strength: 32, defense: 22, strategy: 15, speed: 28, leadership: 15 },
+      battleBonus: { powerMultiplier: 1.08 },
+    },
+    {
+      name: 'Gan Ning',
+      title: 'The Pirate King',
+      factionId: factionWu!._id,
+      rarity: 'uncommon' as const,
+      requiredRankTier: 3,
+      requiredRelationship: 30,
+      stats: { strength: 35, defense: 18, strategy: 12, speed: 32, leadership: 18 },
+      battleBonus: { powerMultiplier: 1.1 },
+    },
+    {
+      name: 'Lu Meng',
+      title: 'The Scholar General',
+      factionId: factionWu!._id,
+      rarity: 'rare' as const,
+      requiredRankTier: 4,
+      requiredRelationship: 55,
+      stats: { strength: 25, defense: 28, strategy: 38, speed: 22, leadership: 32 },
+      battleBonus: { powerMultiplier: 1.15 },
+    },
+    {
+      name: 'Lu Xun',
+      title: 'The Young Strategist',
+      factionId: factionWu!._id,
+      rarity: 'rare' as const,
+      requiredRankTier: 5,
+      requiredRelationship: 65,
+      stats: { strength: 18, defense: 25, strategy: 42, speed: 25, leadership: 35 },
+      battleBonus: { powerMultiplier: 1.18 },
+    },
+    {
+      name: 'Zhou Yu',
+      title: 'The Red Cliffs Commander',
+      factionId: factionWu!._id,
+      rarity: 'legendary' as const,
+      requiredRankTier: 6,
+      requiredRelationship: 100,
+      stats: { strength: 20, defense: 28, strategy: 48, speed: 25, leadership: 42 },
+      battleBonus: { powerMultiplier: 1.3 },
+    },
   ];
 
   for (const g of generalsData) {
-    await General.findOneAndUpdate(
-      { name: g.name },
-      { $setOnInsert: g },
-      { upsert: true },
-    );
+    await General.findOneAndUpdate({ name: g.name }, { $setOnInsert: g }, { upsert: true });
     console.log(`  General: ${g.name} (${g.rarity})`);
   }
 

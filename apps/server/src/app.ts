@@ -14,7 +14,8 @@ import { generalRoutes } from './modules/general/general.routes.js';
 export async function buildApp(opts: { logger?: boolean } = {}) {
   const app = Fastify({ logger: opts.logger ?? true });
 
-  await app.register(cors, { origin: 'http://localhost:5173' });
+  const corsOrigin = process.env.CORS_ORIGIN || 'http://localhost:5173';
+  await app.register(cors, { origin: corsOrigin });
   await app.register(dbPlugin);
   await app.register(authPlugin);
   await app.register(errorHandlerPlugin);

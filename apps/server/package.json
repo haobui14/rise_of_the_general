@@ -10,6 +10,7 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "seed": "tsx src/scripts/seedGameData.ts",
+    "migrate": "tsx src/scripts/migrateDatabase.ts",
     "lint": "tsc --noEmit"
   },
   "dependencies": {
