@@ -25,15 +25,17 @@ RUN pnpm --filter @rotg/shared-types build
 # Build web app
 RUN pnpm --filter @rotg/web build
 
-# Production stage - serve with nginx
-FROM nginx:alpine
+# Production stage - serve with lightweight static server
+FROM node:20-alpine
+
+RUN npm install -g serve@14
+
+WORKDIR /app
 
 # Copy built files
-COPY --from=builder /app/apps/web/dist /usr/share/nginx/html
+COPY --from=builder /app/apps/web/dist ./dist
 
-# Copy nginx configuration template
-COPY apps/web/nginx.conf /etc/nginx/templates/default.conf.template
+EXPOSE 80
 
-# Set default port (Railway overrides this with its PORT env var)
 ENV PORT=80
-ENV NGINX_ENVSUBST_OUTPUT_DIR=/etc/nginx/conf.d
+CMD ["sh", "-c", "serve -s dist -l $PORT"]
