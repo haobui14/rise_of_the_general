@@ -103,7 +103,11 @@ importers:
         specifier: ^6.0.0
         version: 6.4.1(@types/node@22.19.11)(jiti@2.6.1)(lightningcss@1.30.2)(tsx@4.21.0)
 
-  packages/shared-types: {}
+  packages/shared-types:
+    devDependencies:
+      typescript:
+        specifier: ^5.3.3
+        version: 5.9.3
 
 packages:
 
