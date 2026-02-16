@@ -34,9 +34,6 @@ COPY --from=builder /app/apps/web/dist /usr/share/nginx/html
 # Copy nginx configuration template
 COPY apps/web/nginx.conf /etc/nginx/templates/default.conf.template
 
-# Expose port
-EXPOSE 80
-
-# Use envsubst to substitute PORT at runtime, defaulting to 80
+# Set default port (Railway overrides this with its PORT env var)
 ENV PORT=80
-CMD ["/bin/sh", "-c", "envsubst '${PORT}' < /etc/nginx/templates/default.conf.template > /etc/nginx/conf.d/default.conf && nginx -g 'daemon off;'"]
+ENV NGINX_ENVSUBST_OUTPUT_DIR=/etc/nginx/conf.d
