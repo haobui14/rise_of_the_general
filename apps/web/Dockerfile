@@ -15,6 +15,7 @@ COPY packages/shared-types/package.json ./packages/shared-types/
 RUN pnpm install --frozen-lockfile
 
 # Copy source code
+COPY tsconfig.base.json ./
 COPY packages/shared-types ./packages/shared-types
 COPY apps/web ./apps/web
 
