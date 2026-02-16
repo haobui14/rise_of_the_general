@@ -7,5 +7,8 @@
   "scripts": {
     "build": "tsc",
     "lint": "tsc --noEmit"
+  },
+  "devDependencies": {
+    "typescript": "^5.3.3"
   }
 }
