@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import { useAuthStore } from '@/stores/authStore';
 import { useRegister } from '@/hooks/usePlayer';
 import { fetchApi } from '@/lib/api';
@@ -119,6 +119,13 @@ export function CreatePlayerPage() {
               <Button type="submit" className="w-full" disabled={register.isPending}>
                 {register.isPending ? 'Creating...' : 'Begin Your Journey'}
               </Button>
+
+              <p className="text-center text-sm text-muted-foreground">
+                Already have a character?{' '}
+                <Link to="/login" className="text-primary hover:underline">
+                  Login
+                </Link>
+              </p>
             </form>
           </CardContent>
         </Card>

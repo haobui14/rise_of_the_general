@@ -15,6 +15,16 @@ const loginSchema = z.object({
 export const authRoutes: FastifyPluginAsync = async (fastify) => {
   fastify.post('/api/auth/register', async (request, reply) => {
     const body = registerSchema.parse(request.body);
+
+    const existing = await Player.findOne({ username: body.username });
+    if (existing) {
+      return reply.code(409).send({
+        statusCode: 409,
+        error: 'Conflict',
+        message: 'Username already taken',
+      });
+    }
+
     const { player } = await createPlayer(body);
     const token = fastify.jwt.sign({ playerId: player._id.toString() });
     return reply.code(201).send({ token, player });
