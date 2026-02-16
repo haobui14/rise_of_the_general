@@ -22,6 +22,10 @@ COPY apps/web ./apps/web
 # Build shared types first
 RUN pnpm --filter @rotg/shared-types build
 
+# Accept VITE_API_URL as a build argument so Vite can embed it
+ARG VITE_API_URL
+ENV VITE_API_URL=$VITE_API_URL
+
 # Build web app
 RUN pnpm --filter @rotg/web build
 
