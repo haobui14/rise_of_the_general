@@ -20,6 +20,11 @@ export async function buildApp(opts: { logger?: boolean } = {}) {
   await app.register(authPlugin);
   await app.register(errorHandlerPlugin);
 
+  // Health check endpoint
+  app.get('/health', async () => {
+    return { status: 'ok', timestamp: new Date().toISOString() };
+  });
+
   // Public routes (no auth required)
   await app.register(authRoutes);
   await app.register(factionRoutes);
