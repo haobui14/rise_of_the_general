@@ -3,6 +3,7 @@ import { usePlayer } from '@/hooks/usePlayer';
 import { useArmy } from '@/hooks/useArmy';
 import { useInjuries } from '@/hooks/useInjuries';
 import { useLegacy } from '@/hooks/useLegacy';
+import { useCharacters } from '@/hooks/useCharacters';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
 import { Badge } from '@/components/ui/badge';
@@ -21,6 +22,7 @@ export function DashboardPage() {
   const { data: armyData } = useArmy(playerId);
   const { data: injuryData } = useInjuries(playerId);
   const { data: legacyData } = useLegacy(playerId);
+  const { data: charData } = useCharacters(playerId);
 
   if (isLoading) {
     return <div className="text-muted-foreground">Loading...</div>;
@@ -31,20 +33,35 @@ export function DashboardPage() {
   }
 
   const { player, rank, faction } = data;
-  const maxStat = Math.max(...Object.values(player.stats));
+  const effectiveStats = data.effectiveStats ?? player.stats;
+  const maxStat = Math.max(...Object.values(effectiveStats));
   const levelProgress = (player.experience / (player.level * 100)) * 100;
   const army = armyData?.army;
   const injuries = injuryData?.injuries ?? [];
   const legacy = legacyData?.legacy;
+  const activeCharacter =
+    charData?.characters.find((c) => c._id === charData.activeCharacterId) ?? null;
 
   return (
     <div className="space-y-6">
       <div>
         <h2 className="text-2xl font-bold">Dashboard</h2>
-        <p className="text-muted-foreground">Welcome back, {player.username}</p>
+        <p className="text-muted-foreground">
+          Welcome back, {player.username}
+          {activeCharacter && (
+            <>
+              {' '}
+              — commanding as{' '}
+              <span className="text-foreground font-semibold">{activeCharacter.name}</span>{' '}
+              <span className="text-xs capitalize text-muted-foreground">
+                ({activeCharacter.role})
+              </span>
+            </>
+          )}
+        </p>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
         {/* Rank Card */}
         <Card>
           <CardHeader>
@@ -73,7 +90,9 @@ export function DashboardPage() {
             <div>
               <div className="flex justify-between text-sm mb-1">
                 <span>Level {player.level}</span>
-                <span>{player.experience} / {player.level * 100} XP</span>
+                <span>
+                  {player.experience} / {player.level * 100} XP
+                </span>
               </div>
               <Progress value={levelProgress} />
             </div>
@@ -97,11 +116,30 @@ export function DashboardPage() {
           </CardHeader>
           <CardContent>
             <div className="flex items-center gap-2 mb-3">
-              <span className={`h-3 w-3 rounded-full ${player.isAlive ? 'bg-green-500' : 'bg-red-500'}`} />
+              <span
+                className={`h-3 w-3 rounded-full ${player.isAlive ? 'bg-green-500' : 'bg-red-500'}`}
+              />
               <span className="text-sm">{player.isAlive ? 'Alive' : 'Fallen'}</span>
             </div>
             <div className="text-sm text-muted-foreground space-y-1">
               <p>Joined: {new Date(player.createdAt).toLocaleDateString()}</p>
+            </div>
+            <div className="mt-3">
+              <div className="flex justify-between text-xs text-muted-foreground mb-1">
+                <span>War Exhaustion</span>
+                <span
+                  className={
+                    player.warExhaustion > 50
+                      ? 'text-red-400'
+                      : player.warExhaustion > 20
+                        ? 'text-yellow-400'
+                        : 'text-green-400'
+                  }
+                >
+                  {player.warExhaustion}/100
+                </span>
+              </div>
+              <Progress value={player.warExhaustion} max={100} />
             </div>
           </CardContent>
         </Card>
@@ -112,7 +150,9 @@ export function DashboardPage() {
             <CardHeader>
               <CardTitle className="flex items-center justify-between">
                 Army
-                <Badge variant="outline" className="capitalize">{army.formation}</Badge>
+                <Badge variant="outline" className="capitalize">
+                  {army.formation}
+                </Badge>
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-2">
@@ -155,13 +195,15 @@ export function DashboardPage() {
               <CardTitle className="flex items-center justify-between">
                 Legacy
                 <Badge className="bg-yellow-500/20 text-yellow-300 border-yellow-500">
-                  {legacy.dynastiesCompleted} {legacy.dynastiesCompleted === 1 ? 'Dynasty' : 'Dynasties'}
+                  {legacy.dynastiesCompleted}{' '}
+                  {legacy.dynastiesCompleted === 1 ? 'Dynasty' : 'Dynasties'}
                 </Badge>
               </CardTitle>
             </CardHeader>
             <CardContent>
               <p className="text-sm">
-                Permanent power bonus: +{Math.round((legacy.permanentBonuses.powerMultiplier - 1) * 100)}%
+                Permanent power bonus: +
+                {Math.round((legacy.permanentBonuses.powerMultiplier - 1) * 100)}%
               </p>
             </CardContent>
           </Card>
@@ -175,17 +217,25 @@ export function DashboardPage() {
         </CardHeader>
         <CardContent>
           <div className="space-y-3">
-            {Object.entries(player.stats).map(([key, value]) => (
-              <div key={key} className="flex items-center gap-4">
-                <span className="text-sm w-24 text-muted-foreground">
-                  {statLabels[key] || key}
-                </span>
-                <div className="flex-1">
-                  <Progress value={value} max={Math.max(maxStat, 50)} />
+            {(Object.keys(player.stats) as (keyof typeof player.stats)[]).map((key) => {
+              const base = player.stats[key];
+              const effective = effectiveStats[key];
+              const bonus = effective - base;
+              return (
+                <div key={key} className="flex items-center gap-4">
+                  <span className="text-sm w-24 text-muted-foreground">
+                    {statLabels[key] || key}
+                  </span>
+                  <div className="flex-1">
+                    <Progress value={effective} max={Math.max(maxStat, 50)} />
+                  </div>
+                  <span className="text-sm font-mono w-16 text-right flex items-center justify-end gap-1">
+                    <span>{effective}</span>
+                    {bonus > 0 && <span className="text-green-400 text-xs">+{bonus}</span>}
+                  </span>
                 </div>
-                <span className="text-sm font-mono w-8 text-right">{value}</span>
-              </div>
-            ))}
+              );
+            })}
           </div>
         </CardContent>
       </Card>

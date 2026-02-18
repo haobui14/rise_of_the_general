@@ -24,6 +24,22 @@ const errorHandlerPlugin: FastifyPluginAsync = async (fastify) => {
       });
     }
 
+    if (err.name === 'ConflictError') {
+      return reply.code(409).send({
+        statusCode: 409,
+        error: 'Conflict',
+        message: err.message,
+      });
+    }
+
+    if (err.name === 'ConflictError') {
+      return reply.code(409).send({
+        statusCode: 409,
+        error: 'Conflict',
+        message: err.message,
+      });
+    }
+
     if (err.name === 'ValidationError' && !(err as any).errors) {
       // Our custom ValidationError (not Mongoose's)
       return reply.code(400).send({

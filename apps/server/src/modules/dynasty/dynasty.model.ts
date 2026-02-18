@@ -5,6 +5,7 @@ export interface DynastyDoc extends Document {
   startYear: number;
   endYear: number;
   isActive: boolean;
+  timeline: 'historical' | 'divergent';
   createdAt: Date;
 }
 
@@ -14,6 +15,7 @@ const dynastySchema = new Schema<DynastyDoc>(
     startYear: { type: Number, required: true },
     endYear: { type: Number, required: true },
     isActive: { type: Boolean, default: true },
+    timeline: { type: String, enum: ['historical', 'divergent'], default: 'historical' },
   },
   { timestamps: { createdAt: true, updatedAt: false } },
 );

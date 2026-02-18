@@ -6,6 +6,14 @@ import { Skill } from '../modules/skill/skill.model.js';
 import { BattleTemplate } from '../modules/battle/battleTemplate.model.js';
 import { Item } from '../modules/item/item.model.js';
 import { General } from '../modules/general/general.model.js';
+// Phase 3
+import { Territory } from '../modules/world/territory.model.js';
+import { AiFaction } from '../modules/ai/ai-faction.model.js';
+import { EnemyGeneral } from '../modules/enemy-general/enemy-general.model.js';
+import { Campaign } from '../modules/campaign/campaign.model.js';
+import { DynastyState } from '../modules/dynasty-state/dynasty-state.model.js';
+// Phase 4
+import { CourtState } from '../modules/politics/court.model.js';
 
 const MONGODB_URI = process.env.MONGODB_URI || 'mongodb://localhost:27018/rise_of_the_general';
 
@@ -18,7 +26,15 @@ async function seed() {
   console.log('Seeding dynasty...');
   const dynasty = await Dynasty.findOneAndUpdate(
     { name: 'Three Kingdoms' },
-    { $setOnInsert: { name: 'Three Kingdoms', startYear: 220, endYear: 280, isActive: true } },
+    {
+      $setOnInsert: {
+        name: 'Three Kingdoms',
+        startYear: 220,
+        endYear: 280,
+        isActive: true,
+        timeline: 'historical',
+      },
+    },
     { upsert: true, new: true },
   );
   console.log(`  Dynasty: ${dynasty.name}`);
@@ -443,6 +459,385 @@ async function seed() {
     await General.findOneAndUpdate({ name: g.name }, { $setOnInsert: g }, { upsert: true });
     console.log(`  General: ${g.name} (${g.rarity})`);
   }
+
+  // ── Phase 3 ──────────────────────────────────────────────────────────────
+
+  // Resolve faction docs needed for ownership assignments
+  const factionWei2 = await Faction.findOne({ name: 'Wei' });
+  const factionShu2 = await Faction.findOne({ name: 'Shu' });
+  const factionWu2 = await Faction.findOne({ name: 'Wu' });
+
+  if (!factionWei2 || !factionShu2 || !factionWu2) {
+    throw new Error('Factions not found — ensure Phase 1 seed ran first');
+  }
+
+  // 9. Territories (18 territories across 3 regions)
+  console.log('Seeding territories...');
+  const territoriesData = [
+    // North — Wei stronghold
+    {
+      name: 'Luoyang',
+      region: 'north' as const,
+      ownerFactionId: factionWei2._id,
+      strategicValue: 20,
+      defenseRating: 30,
+    },
+    {
+      name: 'Ye',
+      region: 'north' as const,
+      ownerFactionId: factionWei2._id,
+      strategicValue: 15,
+      defenseRating: 20,
+    },
+    {
+      name: "Chang'an",
+      region: 'north' as const,
+      ownerFactionId: factionWei2._id,
+      strategicValue: 18,
+      defenseRating: 25,
+    },
+    {
+      name: 'Bingzhou',
+      region: 'north' as const,
+      ownerFactionId: factionWei2._id,
+      strategicValue: 10,
+      defenseRating: 15,
+    },
+    {
+      name: 'Liangzhou',
+      region: 'north' as const,
+      ownerFactionId: factionWei2._id,
+      strategicValue: 8,
+      defenseRating: 12,
+    },
+    {
+      name: 'Youzhou',
+      region: 'north' as const,
+      ownerFactionId: factionWei2._id,
+      strategicValue: 12,
+      defenseRating: 18,
+    },
+    // Central — contested
+    {
+      name: 'Jing Province',
+      region: 'central' as const,
+      ownerFactionId: factionShu2._id,
+      strategicValue: 20,
+      defenseRating: 20,
+    },
+    {
+      name: 'Runan',
+      region: 'central' as const,
+      ownerFactionId: factionWei2._id,
+      strategicValue: 12,
+      defenseRating: 15,
+    },
+    {
+      name: 'Nanyang',
+      region: 'central' as const,
+      ownerFactionId: factionShu2._id,
+      strategicValue: 10,
+      defenseRating: 12,
+    },
+    {
+      name: 'Xuzhou',
+      region: 'central' as const,
+      ownerFactionId: factionWei2._id,
+      strategicValue: 14,
+      defenseRating: 20,
+    },
+    {
+      name: 'Yangzhou',
+      region: 'central' as const,
+      ownerFactionId: factionWu2._id,
+      strategicValue: 15,
+      defenseRating: 18,
+    },
+    {
+      name: 'Jianye',
+      region: 'central' as const,
+      ownerFactionId: factionWu2._id,
+      strategicValue: 18,
+      defenseRating: 22,
+    },
+    // South — Shu + Wu
+    {
+      name: 'Yizhou',
+      region: 'south' as const,
+      ownerFactionId: factionShu2._id,
+      strategicValue: 20,
+      defenseRating: 25,
+    },
+    {
+      name: 'Hanzhong',
+      region: 'south' as const,
+      ownerFactionId: factionShu2._id,
+      strategicValue: 15,
+      defenseRating: 18,
+    },
+    {
+      name: 'Jiangxia',
+      region: 'south' as const,
+      ownerFactionId: factionWu2._id,
+      strategicValue: 12,
+      defenseRating: 15,
+    },
+    {
+      name: 'Guilin',
+      region: 'south' as const,
+      ownerFactionId: factionWu2._id,
+      strategicValue: 8,
+      defenseRating: 10,
+    },
+    {
+      name: 'Nanhai',
+      region: 'south' as const,
+      ownerFactionId: factionWu2._id,
+      strategicValue: 10,
+      defenseRating: 12,
+    },
+    {
+      name: 'Jianning',
+      region: 'south' as const,
+      ownerFactionId: factionShu2._id,
+      strategicValue: 6,
+      defenseRating: 8,
+    },
+  ];
+
+  const territoryMap: Record<string, mongoose.Types.ObjectId> = {};
+  for (const t of territoriesData) {
+    const doc = await Territory.findOneAndUpdate(
+      { name: t.name },
+      {
+        $set: {
+          strategicValue: t.strategicValue,
+          defenseRating: t.defenseRating,
+          ownerFactionId: t.ownerFactionId,
+        },
+        $setOnInsert: { region: t.region, connectedTerritoryIds: [] },
+      },
+      { upsert: true, new: true },
+    );
+    territoryMap[t.name] = doc._id as mongoose.Types.ObjectId;
+    console.log(`  Territory: ${t.name} (${t.region})`);
+  }
+
+  // Wire up connections (adjacency graph)
+  const connections: [string, string][] = [
+    ['Luoyang', 'Ye'],
+    ['Luoyang', "Chang'an"],
+    ['Luoyang', 'Runan'],
+    ['Ye', 'Bingzhou'],
+    ['Ye', 'Youzhou'],
+    ['Ye', 'Xuzhou'],
+    ["Chang'an", 'Liangzhou'],
+    ["Chang'an", 'Hanzhong'],
+    ['Bingzhou', 'Youzhou'],
+    ['Runan', 'Nanyang'],
+    ['Runan', 'Xuzhou'],
+    ['Xuzhou', 'Yangzhou'],
+    ['Jing Province', 'Nanyang'],
+    ['Jing Province', 'Jianye'],
+    ['Jing Province', 'Jiangxia'],
+    ['Jing Province', 'Hanzhong'],
+    ['Yangzhou', 'Jianye'],
+    ['Jianye', 'Jiangxia'],
+    ['Yizhou', 'Hanzhong'],
+    ['Yizhou', 'Jianning'],
+    ['Jiangxia', 'Guilin'],
+    ['Guilin', 'Nanhai'],
+    ['Guilin', 'Jianning'],
+  ];
+
+  for (const [a, b] of connections) {
+    const idA = territoryMap[a];
+    const idB = territoryMap[b];
+    if (!idA || !idB) continue;
+    await Territory.findByIdAndUpdate(idA, { $addToSet: { connectedTerritoryIds: idB } });
+    await Territory.findByIdAndUpdate(idB, { $addToSet: { connectedTerritoryIds: idA } });
+  }
+  console.log('  Territory connections wired.');
+
+  // 10. AI faction configs
+  console.log('Seeding AI faction configs...');
+  const aiFactionData = [
+    {
+      factionId: factionWei2._id,
+      aggression: 70,
+      expansionRate: 3,
+      preferredRegions: ['north', 'central'],
+    },
+    {
+      factionId: factionShu2._id,
+      aggression: 55,
+      expansionRate: 4,
+      preferredRegions: ['central', 'south'],
+    },
+    {
+      factionId: factionWu2._id,
+      aggression: 50,
+      expansionRate: 5,
+      preferredRegions: ['south', 'central'],
+    },
+  ];
+  for (const ai of aiFactionData) {
+    await AiFaction.findOneAndUpdate(
+      { factionId: ai.factionId },
+      { $setOnInsert: ai },
+      { upsert: true },
+    );
+    console.log(`  AI config for faction: ${ai.factionId}`);
+  }
+
+  // 11. Enemy generals (3 per faction, 9 total)
+  console.log('Seeding enemy generals...');
+  const enemyGeneralsData = [
+    // Wei generals
+    {
+      name: 'Xu Zhu (enemy)',
+      factionId: factionWei2._id,
+      territoryId: territoryMap['Luoyang'],
+      level: 5,
+      powerMultiplier: 1.4,
+      canRetreat: false,
+    },
+    {
+      name: 'Zhang Liao (enemy)',
+      factionId: factionWei2._id,
+      territoryId: territoryMap['Ye'],
+      level: 4,
+      powerMultiplier: 1.3,
+      canRetreat: true,
+    },
+    {
+      name: 'Xiahou Dun (enemy)',
+      factionId: factionWei2._id,
+      territoryId: territoryMap["Chang'an"],
+      level: 3,
+      powerMultiplier: 1.2,
+      canRetreat: false,
+    },
+    // Shu generals
+    {
+      name: 'Wei Yan (enemy)',
+      factionId: factionShu2._id,
+      territoryId: territoryMap['Yizhou'],
+      level: 4,
+      powerMultiplier: 1.3,
+      canRetreat: false,
+    },
+    {
+      name: 'Ma Chao (enemy)',
+      factionId: factionShu2._id,
+      territoryId: territoryMap['Hanzhong'],
+      level: 3,
+      powerMultiplier: 1.2,
+      canRetreat: true,
+    },
+    {
+      name: 'Pang Tong (enemy)',
+      factionId: factionShu2._id,
+      territoryId: territoryMap['Jing Province'],
+      level: 5,
+      powerMultiplier: 1.5,
+      canRetreat: true,
+    },
+    // Wu generals
+    {
+      name: 'Lu Meng (enemy)',
+      factionId: factionWu2._id,
+      territoryId: territoryMap['Jianye'],
+      level: 5,
+      powerMultiplier: 1.4,
+      canRetreat: false,
+    },
+    {
+      name: 'Gan Ning (enemy)',
+      factionId: factionWu2._id,
+      territoryId: territoryMap['Jiangxia'],
+      level: 3,
+      powerMultiplier: 1.2,
+      canRetreat: false,
+    },
+    {
+      name: 'Taishi Ci (enemy)',
+      factionId: factionWu2._id,
+      territoryId: territoryMap['Yangzhou'],
+      level: 4,
+      powerMultiplier: 1.3,
+      canRetreat: true,
+    },
+  ];
+  for (const eg of enemyGeneralsData) {
+    await EnemyGeneral.findOneAndUpdate(
+      { name: eg.name },
+      { $set: { ...eg, alive: true } },
+      { upsert: true },
+    );
+    console.log(`  Enemy general: ${eg.name}`);
+  }
+
+  // 12. Campaigns (3 tiers)
+  console.log('Seeding campaigns...');
+  const campaignsData = [
+    {
+      name: 'The Northern March',
+      dynastyId: dynasty._id,
+      startingTerritoryId: territoryMap['Runan'],
+      victoryConditions: { territoriesRequired: 3, generalsDefeated: 1 },
+    },
+    {
+      name: 'Conquest of the Central Plains',
+      dynastyId: dynasty._id,
+      startingTerritoryId: territoryMap['Jing Province'],
+      victoryConditions: { territoriesRequired: 5, generalsDefeated: 2 },
+    },
+    {
+      name: 'The Final Unification',
+      dynastyId: dynasty._id,
+      startingTerritoryId: territoryMap['Luoyang'],
+      victoryConditions: { territoriesRequired: 10, generalsDefeated: 5 },
+    },
+  ];
+  for (const c of campaignsData) {
+    await Campaign.findOneAndUpdate({ name: c.name }, { $setOnInsert: c }, { upsert: true });
+    console.log(`  Campaign: ${c.name}`);
+  }
+
+  // 13. Dynasty state
+  console.log('Seeding dynasty state...');
+  await DynastyState.findOneAndUpdate(
+    { dynastyId: dynasty._id },
+    {
+      $setOnInsert: {
+        dynastyId: dynasty._id,
+        stability: 100,
+        corruption: 0,
+        activeFactionIds: [factionWei2._id, factionShu2._id, factionWu2._id],
+      },
+    },
+    { upsert: true },
+  );
+  console.log(`  Dynasty state seeded for: ${dynasty.name}`);
+
+  // 14. Court state (Phase 4)
+  console.log('Seeding court state...');
+  await CourtState.findOneAndUpdate(
+    { dynastyId: dynasty._id },
+    {
+      $setOnInsert: {
+        dynastyId: dynasty._id,
+        stability: 75,
+        legitimacy: 75,
+        morale: 75,
+        corruption: 10,
+        lastActionType: null,
+      },
+    },
+    { upsert: true },
+  );
+  console.log(`  Court state seeded for: ${dynasty.name}`);
 
   console.log('\nSeed complete!');
   await mongoose.disconnect();

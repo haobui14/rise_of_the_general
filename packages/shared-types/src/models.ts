@@ -1,4 +1,17 @@
-import type { BattleStatus, ItemType, ItemRarity, SkillType, Formation, TroopType, InjuryType } from './enums.js';
+import type {
+  BattleStatus,
+  ItemType,
+  ItemRarity,
+  SkillType,
+  Formation,
+  TroopType,
+  InjuryType,
+  Region,
+  CampaignStatus,
+  CharacterRole,
+  TimelineType,
+  CourtActionType,
+} from './enums.js';
 
 export interface IBaseStats {
   strength: number;
@@ -26,6 +39,7 @@ export interface IDynasty {
   startYear: number;
   endYear: number;
   isActive: boolean;
+  timeline: TimelineType;
   createdAt: Date;
 }
 
@@ -76,6 +90,10 @@ export interface IPlayer {
   gold: number;
   stats: IBaseStats;
   isAlive: boolean;
+  warExhaustion: number;
+  activeCharacterId?: string;
+  politicalTurns: number;
+  successionPending: boolean;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -187,4 +205,90 @@ export interface IPowerBreakdown {
   synergyMultiplier: number;
   legacyBonus: number;
   finalPower: number;
+}
+
+// Phase 3 Models
+
+export interface ITerritory {
+  _id: string;
+  name: string;
+  region: Region;
+  ownerFactionId: string;
+  strategicValue: number;
+  defenseRating: number;
+  connectedTerritoryIds: string[];
+}
+
+export interface IAiFaction {
+  _id: string;
+  factionId: string;
+  aggression: number;
+  expansionRate: number;
+  preferredRegions: Region[];
+}
+
+export interface IEnemyGeneral {
+  _id: string;
+  name: string;
+  factionId: string;
+  territoryId: string;
+  level: number;
+  powerMultiplier: number;
+  alive: boolean;
+  canRetreat: boolean;
+}
+
+export interface ICampaign {
+  _id: string;
+  name: string;
+  dynastyId: string;
+  startingTerritoryId: string;
+  victoryConditions: {
+    territoriesRequired: number;
+    generalsDefeated: number;
+  };
+}
+
+export interface IPlayerCampaign {
+  _id: string;
+  playerId: string;
+  campaignId: string;
+  territoriesCaptured: string[];
+  generalsDefeated: number;
+  status: CampaignStatus;
+  startedAt: Date;
+  completedAt: Date | null;
+}
+
+export interface IDynastyState {
+  _id: string;
+  dynastyId: string;
+  stability: number;
+  corruption: number;
+  activeFactionIds: string[];
+}
+
+// Phase 4 Models
+
+export interface IPlayerCharacter {
+  _id: string;
+  playerId: string;
+  name: string;
+  role: CharacterRole;
+  loyalty: number; // 0–100
+  ambition: number; // 0–100
+  stats: IBaseStats;
+  isAlive: boolean;
+  createdAt: Date;
+}
+
+export interface ICourtState {
+  _id: string;
+  dynastyId: string;
+  stability: number; // 0–100
+  legitimacy: number; // 0–100
+  morale: number; // 0–100
+  corruption: number; // 0–100
+  lastActionType: CourtActionType | null;
+  updatedAt: Date;
 }

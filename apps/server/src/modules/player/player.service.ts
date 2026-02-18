@@ -5,6 +5,7 @@ import { RankDefinition } from '../rank/rank.model.js';
 import { Skill } from '../skill/skill.model.js';
 import { checkPromotionEligibility } from '../rank/rank.engine.js';
 import { NotFoundError, ValidationError } from '../../utils/errors.js';
+import type { IBaseStats } from '@rotg/shared-types';
 
 export async function createPlayer(data: { username: string; factionId: string }) {
   const faction = await Faction.findById(data.factionId);
@@ -41,7 +42,31 @@ export async function getPlayer(id: string) {
   const rank = await RankDefinition.findById(player.currentRankId);
   const faction = await Faction.findById(player.factionId);
 
-  return { player, rank, faction };
+  // Compute effective stats = base stats + equipped item bonuses
+  const inventory = await PlayerInventory.findOne({ playerId: id }).populate('items.itemId');
+  const itemBonuses: IBaseStats = { strength: 0, defense: 0, strategy: 0, speed: 0, leadership: 0 };
+  if (inventory) {
+    for (const entry of inventory.items) {
+      if (entry.equipped && entry.itemId) {
+        const item = entry.itemId as any;
+        itemBonuses.strength += item.statBonus?.strength ?? 0;
+        itemBonuses.defense += item.statBonus?.defense ?? 0;
+        itemBonuses.strategy += item.statBonus?.strategy ?? 0;
+        itemBonuses.speed += item.statBonus?.speed ?? 0;
+        itemBonuses.leadership += item.statBonus?.leadership ?? 0;
+      }
+    }
+  }
+
+  const effectiveStats: IBaseStats = {
+    strength: player.stats.strength + itemBonuses.strength,
+    defense: player.stats.defense + itemBonuses.defense,
+    strategy: player.stats.strategy + itemBonuses.strategy,
+    speed: player.stats.speed + itemBonuses.speed,
+    leadership: player.stats.leadership + itemBonuses.leadership,
+  };
+
+  return { player, rank, faction, effectiveStats };
 }
 
 export async function promotePlayer(id: string) {

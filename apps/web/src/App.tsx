@@ -8,6 +8,12 @@ import { RankPage } from './pages/RankPage';
 import { InventoryPage } from './pages/InventoryPage';
 import { GeneralsPage } from './pages/GeneralsPage';
 import { ArmyPage } from './pages/ArmyPage';
+import { WorldPage } from './pages/WorldPage';
+import { CampaignsPage } from './pages/CampaignsPage';
+import { DynastyPage } from './pages/DynastyPage';
+import { CharactersPage } from './pages/CharactersPage';
+import { SuccessionPage } from './pages/SuccessionPage';
+import { PoliticsPage } from './pages/PoliticsPage';
 
 export function App() {
   return (
@@ -21,6 +27,12 @@ export function App() {
         <Route path="/inventory" element={<InventoryPage />} />
         <Route path="/generals" element={<GeneralsPage />} />
         <Route path="/army" element={<ArmyPage />} />
+        <Route path="/world" element={<WorldPage />} />
+        <Route path="/campaigns" element={<CampaignsPage />} />
+        <Route path="/dynasty" element={<DynastyPage />} />
+        <Route path="/characters" element={<CharactersPage />} />
+        <Route path="/succession" element={<SuccessionPage />} />
+        <Route path="/politics" element={<PoliticsPage />} />
       </Route>
       <Route path="*" element={<Navigate to="/dashboard" replace />} />
     </Routes>

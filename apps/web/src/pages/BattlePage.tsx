@@ -1,11 +1,18 @@
 import { useState } from 'react';
 import { useAuthStore } from '@/stores/authStore';
 import { useBattleTemplates, useFight } from '@/hooks/useBattle';
+import { useGenerateNarrative } from '@/hooks/useAiContent';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import type { IBattle, IItem, IPowerBreakdown, IPlayerInjury, ISynergyPair } from '@rotg/shared-types';
+import type {
+  IBattle,
+  IItem,
+  IPowerBreakdown,
+  IPlayerInjury,
+  ISynergyPair,
+} from '@rotg/shared-types';
 
 const rarityColors: Record<string, string> = {
   common: 'text-gray-300',
@@ -35,9 +42,11 @@ export function BattlePage() {
   const playerId = useAuthStore((s) => s.playerId);
   const { data, isLoading } = useBattleTemplates();
   const fight = useFight();
+  const generateNarrative = useGenerateNarrative();
   const [fighting, setFighting] = useState(false);
   const [result, setResult] = useState<BattleResult | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [narrative, setNarrative] = useState<string | null>(null);
 
   const handleFight = async (templateId: string) => {
     if (!playerId) return;
@@ -47,6 +56,7 @@ export function BattlePage() {
     try {
       await new Promise((r) => setTimeout(r, 800));
       const resolved = await fight.mutateAsync({ playerId, templateId });
+      setNarrative(null);
       setResult({
         battle: resolved.battle,
         droppedItem: resolved.droppedItem ?? null,
@@ -55,6 +65,15 @@ export function BattlePage() {
         moraleChange: resolved.moraleChange ?? null,
         activeSynergies: resolved.activeSynergies ?? [],
       });
+      // Fire-and-forget: AI battle narrative
+      generateNarrative.mutate(
+        {
+          playerId,
+          event: resolved.battle.status === 'won' ? 'battle_victory' : 'battle_defeat',
+          context: `casualty rate ${resolved.battle.result.casualties}%, merit gained ${resolved.battle.result.meritGained}`,
+        },
+        { onSuccess: (data) => setNarrative(data.text) },
+      );
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Battle failed');
     } finally {
@@ -87,9 +106,7 @@ export function BattlePage() {
 
       {error && (
         <Card className="border-destructive/50 bg-destructive/5">
-          <CardContent className="p-4 text-center text-destructive text-sm">
-            {error}
-          </CardContent>
+          <CardContent className="p-4 text-center text-destructive text-sm">{error}</CardContent>
         </Card>
       )}
 
@@ -132,12 +149,16 @@ export function BattlePage() {
       </div>
 
       {/* Battle Result Dialog */}
-      <Dialog open={!!result} onOpenChange={() => setResult(null)}>
+      <Dialog
+        open={!!result}
+        onOpenChange={() => {
+          setResult(null);
+          setNarrative(null);
+        }}
+      >
         <DialogContent className="max-w-md">
           <DialogHeader>
-            <DialogTitle
-              className={battle?.status === 'won' ? 'text-green-400' : 'text-red-400'}
-            >
+            <DialogTitle className={battle?.status === 'won' ? 'text-green-400' : 'text-red-400'}>
               {battle?.status === 'won' ? 'Victory!' : 'Defeat'}
             </DialogTitle>
           </DialogHeader>
@@ -216,8 +237,11 @@ export function BattlePage() {
 
               {/* Morale Change */}
               {result?.moraleChange != null && (
-                <p className={`text-sm ${result.moraleChange > 0 ? 'text-green-400' : 'text-red-400'}`}>
-                  Morale {result.moraleChange > 0 ? '+' : ''}{result.moraleChange}
+                <p
+                  className={`text-sm ${result.moraleChange > 0 ? 'text-green-400' : 'text-red-400'}`}
+                >
+                  Morale {result.moraleChange > 0 ? '+' : ''}
+                  {result.moraleChange}
                 </p>
               )}
 
@@ -225,7 +249,10 @@ export function BattlePage() {
               {result?.newInjury && (
                 <div className="border border-destructive/50 rounded-lg p-3 bg-destructive/5 text-sm">
                   <p className="font-semibold text-destructive">Injury Sustained!</p>
-                  <p className="capitalize">{result.newInjury.type.replace('_', ' ')} - {result.newInjury.battlesRemaining} battles remaining</p>
+                  <p className="capitalize">
+                    {result.newInjury.type.replace('_', ' ')} - {result.newInjury.battlesRemaining}{' '}
+                    battles remaining
+                  </p>
                 </div>
               )}
 
@@ -241,7 +268,25 @@ export function BattlePage() {
                 </div>
               )}
 
-              <Button className="w-full" onClick={() => setResult(null)}>
+              {/* AI Narrative */}
+              {generateNarrative.isPending && (
+                <p className="text-xs text-muted-foreground italic animate-pulse">
+                  Composing battle chronicle…
+                </p>
+              )}
+              {narrative && (
+                <div className="rounded-lg border border-border bg-muted/30 px-3 py-2 text-xs text-muted-foreground italic leading-relaxed">
+                  {narrative}
+                </div>
+              )}
+
+              <Button
+                className="w-full"
+                onClick={() => {
+                  setResult(null);
+                  setNarrative(null);
+                }}
+              >
                 Continue
               </Button>
             </div>
