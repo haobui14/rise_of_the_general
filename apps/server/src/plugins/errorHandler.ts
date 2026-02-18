@@ -13,25 +13,28 @@ const errorHandlerPlugin: FastifyPluginAsync = async (fastify) => {
       });
     }
 
-    if (error.name === 'NotFoundError') {
+    // Type guard to ensure error is an Error object
+    const err = error instanceof Error ? error : new Error(String(error));
+
+    if (err.name === 'NotFoundError') {
       return reply.code(404).send({
         statusCode: 404,
         error: 'Not Found',
-        message: error.message,
+        message: err.message,
       });
     }
 
-    if (error.name === 'ValidationError' && !(error as any).errors) {
+    if (err.name === 'ValidationError' && !(err as any).errors) {
       // Our custom ValidationError (not Mongoose's)
       return reply.code(400).send({
         statusCode: 400,
         error: 'Bad Request',
-        message: error.message,
+        message: err.message,
       });
     }
 
     // Mongoose CastError (invalid ObjectId)
-    if (error.name === 'CastError') {
+    if (err.name === 'CastError') {
       return reply.code(400).send({
         statusCode: 400,
         error: 'Bad Request',
@@ -40,19 +43,19 @@ const errorHandlerPlugin: FastifyPluginAsync = async (fastify) => {
     }
 
     // Mongoose ValidationError (has .errors property)
-    if (error.name === 'ValidationError' && (error as any).errors) {
+    if (err.name === 'ValidationError' && (err as any).errors) {
       return reply.code(400).send({
         statusCode: 400,
         error: 'Bad Request',
-        message: error.message,
+        message: err.message,
       });
     }
 
-    fastify.log.error({ err: error, name: error.name, message: error.message }, 'Unhandled error');
+    fastify.log.error({ err, name: err.name, message: err.message }, 'Unhandled error');
     return reply.code(500).send({
       statusCode: 500,
       error: 'Internal Server Error',
-      message: process.env.NODE_ENV === 'development' ? error.message : 'Something went wrong',
+      message: process.env.NODE_ENV === 'development' ? err.message : 'Something went wrong',
     });
   });
 };
