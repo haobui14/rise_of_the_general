@@ -63,10 +63,10 @@ importers:
         specifier: ^0.469.0
         version: 0.469.0(react@19.2.4)
       react:
-        specifier: ^19.0.0
+        specifier: ^19.2.4
         version: 19.2.4
       react-dom:
-        specifier: ^19.0.0
+        specifier: ^19.2.4
         version: 19.2.4(react@19.2.4)
       react-router:
         specifier: ^7.1.0
@@ -78,7 +78,7 @@ importers:
         specifier: ^2.6.0
         version: 2.6.1
       zustand:
-        specifier: ^5.0.0
+        specifier: ^5.0.11
         version: 5.0.11(@types/react@19.2.14)(react@19.2.4)
     devDependencies:
       '@tailwindcss/vite':
