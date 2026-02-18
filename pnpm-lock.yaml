@@ -11,7 +11,7 @@ importers:
   apps/server:
     dependencies:
       '@fastify/cors':
-        specifier: ^11.0.0
+        specifier: ^11.2.0
         version: 11.2.0
       '@fastify/jwt':
         specifier: ^9.0.0
@@ -20,10 +20,10 @@ importers:
         specifier: workspace:*
         version: link:../../packages/shared-types
       fastify:
-        specifier: ^5.2.0
+        specifier: ^5.7.4
         version: 5.7.4
       fastify-plugin:
-        specifier: ^5.0.0
+        specifier: ^5.1.0
         version: 5.1.0
       mongoose:
         specifier: ^8.12.0
@@ -36,10 +36,10 @@ importers:
         specifier: ^22.0.0
         version: 22.19.11
       tsx:
-        specifier: ^4.19.0
+        specifier: ^4.21.0
         version: 4.21.0
       typescript:
-        specifier: ^5.7.0
+        specifier: ^5.9.3
         version: 5.9.3
       vitest:
         specifier: ^3.0.0
