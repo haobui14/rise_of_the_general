@@ -11,7 +11,7 @@ export async function createPlayer(data: { username: string; factionId: string }
   if (!faction) throw new NotFoundError('Faction not found');
 
   const recruitRank = await RankDefinition.findOne({ tier: 1 });
-  if (!recruitRank) throw new Error('Recruit rank not found. Run seed script first.');
+  if (!recruitRank) throw new NotFoundError('Recruit rank not found — run the seed script');
 
   const baseStats = {
     strength: 5 + (faction.baseBonus.strength || 0),
@@ -48,15 +48,25 @@ export async function promotePlayer(id: string) {
   const player = await Player.findById(id);
   if (!player) throw new NotFoundError('Player not found');
 
-  const currentRank = await RankDefinition.findById(player.currentRankId);
-  if (!currentRank) throw new Error('Current rank not found');
+  let currentRank = await RankDefinition.findById(player.currentRankId);
+
+  // If rank ref is stale (e.g. re-seeded DB), try to recover by matching tier
+  if (!currentRank) {
+    currentRank = await RankDefinition.findOne({ tier: 1 });
+    if (currentRank) {
+      player.currentRankId = currentRank._id;
+      await player.save();
+    } else {
+      throw new NotFoundError('Current rank not found — run the seed script');
+    }
+  }
 
   if (!currentRank.nextRankId) {
     throw new ValidationError('Already at maximum rank');
   }
 
   const nextRank = await RankDefinition.findById(currentRank.nextRankId);
-  if (!nextRank) throw new Error('Next rank not found');
+  if (!nextRank) throw new NotFoundError('Next rank not found in database');
 
   const eligibility = checkPromotionEligibility(
     { merit: player.merit, stats: player.stats },

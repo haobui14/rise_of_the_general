@@ -1,8 +1,19 @@
 import { General } from './general.model.js';
 import { PlayerGeneral } from './playerGeneral.model.js';
+import { PlayerGeneralSlots } from './playerGeneralSlots.model.js';
 import { Player } from '../player/player.model.js';
 import { RankDefinition } from '../rank/rank.model.js';
 import { NotFoundError, ValidationError } from '../../utils/errors.js';
+
+export const GENERAL_SLOT_LIMITS: Record<number, number> = {
+  1: 0,
+  2: 1,
+  3: 1,
+  4: 2,
+  5: 2,
+  6: 3,
+  7: 5,
+};
 
 export async function listGenerals(playerId: string) {
   const player = await Player.findById(playerId);
@@ -118,4 +129,57 @@ export async function gainRelationshipFromBattle(playerId: string, factionId: st
       { upsert: true },
     );
   }
+}
+
+export async function getActiveGenerals(playerId: string) {
+  const player = await Player.findById(playerId);
+  if (!player) throw new NotFoundError('Player not found');
+
+  const rank = await RankDefinition.findById(player.currentRankId);
+  const maxSlots = GENERAL_SLOT_LIMITS[rank?.tier ?? 1] ?? 0;
+
+  const slots = await PlayerGeneralSlots.findOne({ playerId }).populate('activeGeneralIds');
+  const activeGenerals = (slots?.activeGeneralIds ?? []) as any[];
+
+  return { activeGenerals, maxSlots, currentSlots: activeGenerals.length };
+}
+
+export async function deployGeneral(playerId: string, generalId: string) {
+  const player = await Player.findById(playerId);
+  if (!player) throw new NotFoundError('Player not found');
+
+  const rank = await RankDefinition.findById(player.currentRankId);
+  const maxSlots = GENERAL_SLOT_LIMITS[rank?.tier ?? 1] ?? 0;
+
+  // Check general is recruited
+  const rel = await PlayerGeneral.findOne({ playerId, generalId, recruited: true });
+  if (!rel) throw new ValidationError('General not recruited');
+
+  let slots = await PlayerGeneralSlots.findOne({ playerId });
+  if (!slots) {
+    slots = await PlayerGeneralSlots.create({ playerId, activeGeneralIds: [] });
+  }
+
+  if (slots.activeGeneralIds.length >= maxSlots) {
+    throw new ValidationError(`All ${maxSlots} general slots are full`);
+  }
+
+  if (slots.activeGeneralIds.some((id) => id.toString() === generalId)) {
+    throw new ValidationError('General already deployed');
+  }
+
+  slots.activeGeneralIds.push(generalId as any);
+  await slots.save();
+
+  return getActiveGenerals(playerId);
+}
+
+export async function withdrawGeneral(playerId: string, generalId: string) {
+  const slots = await PlayerGeneralSlots.findOne({ playerId });
+  if (!slots) throw new NotFoundError('No generals deployed');
+
+  slots.activeGeneralIds = slots.activeGeneralIds.filter((id) => id.toString() !== generalId) as any;
+  await slots.save();
+
+  return getActiveGenerals(playerId);
 }

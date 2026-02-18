@@ -7,6 +7,7 @@ import { BattlePage } from './pages/BattlePage';
 import { RankPage } from './pages/RankPage';
 import { InventoryPage } from './pages/InventoryPage';
 import { GeneralsPage } from './pages/GeneralsPage';
+import { ArmyPage } from './pages/ArmyPage';
 
 export function App() {
   return (
@@ -19,6 +20,7 @@ export function App() {
         <Route path="/rank" element={<RankPage />} />
         <Route path="/inventory" element={<InventoryPage />} />
         <Route path="/generals" element={<GeneralsPage />} />
+        <Route path="/army" element={<ArmyPage />} />
       </Route>
       <Route path="*" element={<Navigate to="/dashboard" replace />} />
     </Routes>

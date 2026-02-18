@@ -9,7 +9,14 @@ import type {
   IPlayerInventory,
   IGeneral,
   IPlayerGeneral,
+  IPlayerArmy,
+  IPlayerInjury,
+  IPlayerLegacy,
+  ISynergyPair,
+  IPowerBreakdown,
 } from './models.js';
+
+import type { Formation, TroopType } from './enums.js';
 
 // Auth
 export interface RegisterRequest {
@@ -57,6 +64,10 @@ export interface ResolveBattleResponse {
   battle: IBattle;
   player: IPlayer;
   droppedItem: IItem | null;
+  powerBreakdown: IPowerBreakdown;
+  newInjury: IPlayerInjury | null;
+  moraleChange: number | null;
+  activeSynergies: ISynergyPair[];
 }
 
 // Faction
@@ -66,6 +77,14 @@ export interface FactionListResponse {
 
 // Inventory
 export interface InventoryResponse {
+  inventory: IPlayerInventory;
+}
+
+export interface EquipItemRequest {
+  itemId: string;
+}
+
+export interface EquipItemResponse {
   inventory: IPlayerInventory;
 }
 
@@ -88,6 +107,66 @@ export interface GeneralsListResponse {
 export interface RecruitGeneralResponse {
   general: IGeneral;
   playerGeneral: IPlayerGeneral;
+}
+
+export interface ActiveGeneralsResponse {
+  activeGenerals: IGeneral[];
+  maxSlots: number;
+  currentSlots: number;
+}
+
+export interface DeployGeneralRequest {
+  generalId: string;
+}
+
+export interface WithdrawGeneralRequest {
+  generalId: string;
+}
+
+// Synergy
+export interface SynergyListResponse {
+  synergies: ISynergyPair[];
+}
+
+export interface ActiveSynergiesResponse {
+  activeSynergies: ISynergyPair[];
+  totalMultiplier: number;
+}
+
+// Army
+export interface PlayerArmyResponse {
+  army: IPlayerArmy | null;
+}
+
+export interface CreateArmyRequest {
+  troopType: TroopType;
+}
+
+export interface ChangeFormationRequest {
+  formation: Formation;
+}
+
+export interface RecruitTroopsRequest {
+  count: number;
+}
+
+export interface ChangeTroopTypeRequest {
+  troopType: TroopType;
+}
+
+// Injuries
+export interface PlayerInjuriesResponse {
+  injuries: IPlayerInjury[];
+}
+
+// Legacy / Dynasty
+export interface PlayerLegacyResponse {
+  legacy: IPlayerLegacy | null;
+}
+
+export interface CompleteDynastyResponse {
+  player: IPlayer;
+  legacy: IPlayerLegacy;
 }
 
 // Error

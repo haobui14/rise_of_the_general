@@ -1,7 +1,7 @@
 import { Outlet, NavLink } from 'react-router-dom';
 import { useAuthStore } from '@/stores/authStore';
 import { usePlayer } from '@/hooks/usePlayer';
-import { Swords, LayoutDashboard, Medal, Backpack, LogOut, Users } from 'lucide-react';
+import { Swords, LayoutDashboard, Medal, Backpack, LogOut, Users, Shield } from 'lucide-react';
 import { AuthGuard } from './AuthGuard';
 
 const navItems = [
@@ -9,6 +9,7 @@ const navItems = [
   { to: '/battle', label: 'Battle', icon: Swords },
   { to: '/rank', label: 'Rank', icon: Medal },
   { to: '/generals', label: 'Generals', icon: Users },
+  { to: '/army', label: 'Army', icon: Shield },
   { to: '/inventory', label: 'Inventory', icon: Backpack },
 ];
 

@@ -1,7 +1,6 @@
 import fp from 'fastify-plugin';
 import { ZodError } from 'zod';
 import type { FastifyPluginAsync } from 'fastify';
-import { NotFoundError, ValidationError } from '../utils/errors.js';
 
 const errorHandlerPlugin: FastifyPluginAsync = async (fastify) => {
   fastify.setErrorHandler((error, _request, reply) => {
@@ -14,7 +13,7 @@ const errorHandlerPlugin: FastifyPluginAsync = async (fastify) => {
       });
     }
 
-    if (error instanceof NotFoundError) {
+    if (error.name === 'NotFoundError') {
       return reply.code(404).send({
         statusCode: 404,
         error: 'Not Found',
@@ -22,7 +21,8 @@ const errorHandlerPlugin: FastifyPluginAsync = async (fastify) => {
       });
     }
 
-    if (error instanceof ValidationError) {
+    if (error.name === 'ValidationError' && !(error as any).errors) {
+      // Our custom ValidationError (not Mongoose's)
       return reply.code(400).send({
         statusCode: 400,
         error: 'Bad Request',
@@ -31,7 +31,7 @@ const errorHandlerPlugin: FastifyPluginAsync = async (fastify) => {
     }
 
     // Mongoose CastError (invalid ObjectId)
-    if (error instanceof Error && error.name === 'CastError') {
+    if (error.name === 'CastError') {
       return reply.code(400).send({
         statusCode: 400,
         error: 'Bad Request',
@@ -39,11 +39,20 @@ const errorHandlerPlugin: FastifyPluginAsync = async (fastify) => {
       });
     }
 
-    fastify.log.error(error);
+    // Mongoose ValidationError (has .errors property)
+    if (error.name === 'ValidationError' && (error as any).errors) {
+      return reply.code(400).send({
+        statusCode: 400,
+        error: 'Bad Request',
+        message: error.message,
+      });
+    }
+
+    fastify.log.error({ err: error, name: error.name, message: error.message }, 'Unhandled error');
     return reply.code(500).send({
       statusCode: 500,
       error: 'Internal Server Error',
-      message: 'Something went wrong',
+      message: process.env.NODE_ENV === 'development' ? error.message : 'Something went wrong',
     });
   });
 };

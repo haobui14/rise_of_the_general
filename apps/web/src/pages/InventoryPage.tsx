@@ -1,7 +1,8 @@
 import { useAuthStore } from '@/stores/authStore';
-import { useInventory } from '@/hooks/usePlayer';
+import { useInventory, useEquipItem, useUnequipItem } from '@/hooks/usePlayer';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
 
 const rarityColors: Record<string, string> = {
   common: 'bg-gray-500/20 text-gray-300 border-gray-500',
@@ -12,6 +13,8 @@ const rarityColors: Record<string, string> = {
 export function InventoryPage() {
   const playerId = useAuthStore((s) => s.playerId);
   const { data, isLoading } = useInventory(playerId);
+  const equip = useEquipItem(playerId);
+  const unequip = useUnequipItem(playerId);
 
   if (isLoading) {
     return <div className="text-muted-foreground">Loading inventory...</div>;
@@ -42,15 +45,15 @@ export function InventoryPage() {
             if (!item || typeof item === 'string') return null;
 
             return (
-              <Card key={idx}>
+              <Card key={idx} className={entry.equipped ? 'border-primary/50' : ''}>
                 <CardHeader>
                   <CardTitle className="text-base flex items-center justify-between">
                     {item.name}
                     {entry.equipped && <Badge variant="success">Equipped</Badge>}
                   </CardTitle>
                 </CardHeader>
-                <CardContent>
-                  <div className="flex gap-2 mb-3">
+                <CardContent className="space-y-3">
+                  <div className="flex gap-2">
                     <Badge variant="outline">{item.type}</Badge>
                     <span
                       className={`inline-flex items-center rounded-md border px-2 py-0.5 text-xs font-semibold ${
@@ -72,6 +75,26 @@ export function InventoryPage() {
                           ),
                       )}
                   </div>
+                  {entry.equipped ? (
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="w-full"
+                      disabled={unequip.isPending}
+                      onClick={() => unequip.mutate(item._id)}
+                    >
+                      Unequip
+                    </Button>
+                  ) : (
+                    <Button
+                      size="sm"
+                      className="w-full"
+                      disabled={equip.isPending}
+                      onClick={() => equip.mutate(item._id)}
+                    >
+                      Equip
+                    </Button>
+                  )}
                 </CardContent>
               </Card>
             );

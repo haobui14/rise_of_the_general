@@ -7,6 +7,7 @@ import type {
   RegisterRequest,
   RankListResponse,
   InventoryResponse,
+  EquipItemResponse,
 } from '@rotg/shared-types';
 
 export function usePlayer(playerId: string | null) {
@@ -54,5 +55,33 @@ export function useInventory(playerId: string | null) {
     queryKey: ['inventory', playerId],
     queryFn: () => fetchApi<InventoryResponse>(`/player/${playerId}/inventory`),
     enabled: !!playerId,
+  });
+}
+
+export function useEquipItem(playerId: string | null) {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (itemId: string) =>
+      fetchApi<EquipItemResponse>(`/player/${playerId}/inventory/equip`, {
+        method: 'POST',
+        body: JSON.stringify({ itemId }),
+      }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['inventory'] });
+    },
+  });
+}
+
+export function useUnequipItem(playerId: string | null) {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (itemId: string) =>
+      fetchApi<EquipItemResponse>(`/player/${playerId}/inventory/unequip`, {
+        method: 'POST',
+        body: JSON.stringify({ itemId }),
+      }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['inventory'] });
+    },
   });
 }

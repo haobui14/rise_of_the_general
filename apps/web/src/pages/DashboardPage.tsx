@@ -1,5 +1,8 @@
 import { useAuthStore } from '@/stores/authStore';
 import { usePlayer } from '@/hooks/usePlayer';
+import { useArmy } from '@/hooks/useArmy';
+import { useInjuries } from '@/hooks/useInjuries';
+import { useLegacy } from '@/hooks/useLegacy';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
 import { Badge } from '@/components/ui/badge';
@@ -15,6 +18,9 @@ const statLabels: Record<string, string> = {
 export function DashboardPage() {
   const playerId = useAuthStore((s) => s.playerId);
   const { data, isLoading, error } = usePlayer(playerId);
+  const { data: armyData } = useArmy(playerId);
+  const { data: injuryData } = useInjuries(playerId);
+  const { data: legacyData } = useLegacy(playerId);
 
   if (isLoading) {
     return <div className="text-muted-foreground">Loading...</div>;
@@ -27,6 +33,9 @@ export function DashboardPage() {
   const { player, rank, faction } = data;
   const maxStat = Math.max(...Object.values(player.stats));
   const levelProgress = (player.experience / (player.level * 100)) * 100;
+  const army = armyData?.army;
+  const injuries = injuryData?.injuries ?? [];
+  const legacy = legacyData?.legacy;
 
   return (
     <div className="space-y-6">
@@ -96,6 +105,67 @@ export function DashboardPage() {
             </div>
           </CardContent>
         </Card>
+
+        {/* Army Card */}
+        {army && (
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center justify-between">
+                Army
+                <Badge variant="outline" className="capitalize">{army.formation}</Badge>
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-2">
+              <div className="grid grid-cols-2 gap-2 text-sm">
+                <div>
+                  <p className="text-muted-foreground">Troops</p>
+                  <p className="font-semibold">{army.troopCount}</p>
+                </div>
+                <div>
+                  <p className="text-muted-foreground">Morale</p>
+                  <p className="font-semibold">{army.morale}/100</p>
+                </div>
+              </div>
+              <Progress value={army.morale} />
+            </CardContent>
+          </Card>
+        )}
+
+        {/* Injuries Card */}
+        {injuries.length > 0 && (
+          <Card className="border-destructive/30">
+            <CardHeader>
+              <CardTitle className="text-destructive">Active Injuries</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-2">
+              {injuries.map((inj: any) => (
+                <div key={inj._id} className="flex justify-between text-sm">
+                  <span className="capitalize">{inj.type.replace('_', ' ')}</span>
+                  <span className="text-muted-foreground">{inj.battlesRemaining} battles left</span>
+                </div>
+              ))}
+            </CardContent>
+          </Card>
+        )}
+
+        {/* Legacy Card */}
+        {legacy && legacy.dynastiesCompleted > 0 && (
+          <Card className="border-yellow-500/30">
+            <CardHeader>
+              <CardTitle className="flex items-center justify-between">
+                Legacy
+                <Badge className="bg-yellow-500/20 text-yellow-300 border-yellow-500">
+                  {legacy.dynastiesCompleted} {legacy.dynastiesCompleted === 1 ? 'Dynasty' : 'Dynasties'}
+                </Badge>
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <p className="text-sm">
+                Permanent power bonus: +{Math.round((legacy.permanentBonuses.powerMultiplier - 1) * 100)}%
+              </p>
+            </CardContent>
+          </Card>
+        )}
       </div>
 
       {/* Stats Card */}

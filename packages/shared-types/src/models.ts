@@ -1,4 +1,4 @@
-import type { BattleStatus, ItemType, ItemRarity, SkillType } from './enums.js';
+import type { BattleStatus, ItemType, ItemRarity, SkillType, Formation, TroopType, InjuryType } from './enums.js';
 
 export interface IBaseStats {
   strength: number;
@@ -134,4 +134,57 @@ export interface IPlayerGeneral {
   relationship: number;
   recruited: boolean;
   recruitedAt: Date | null;
+}
+
+// Phase 2 Models
+
+export interface IPlayerArmy {
+  _id: string;
+  playerId: string;
+  troopCount: number;
+  morale: number;
+  formation: Formation;
+  troopType: TroopType;
+}
+
+export interface IPlayerGeneralSlots {
+  _id: string;
+  playerId: string;
+  activeGeneralIds: string[];
+}
+
+export interface ISynergyPair {
+  generalNames: [string, string];
+  bonusMultiplier: number;
+  name: string;
+}
+
+export interface IPlayerInjury {
+  _id: string;
+  playerId: string;
+  type: InjuryType;
+  statPenalty: Partial<IBaseStats>;
+  durationBattles: number;
+  battlesRemaining: number;
+  createdAt: Date;
+}
+
+export interface IPlayerLegacy {
+  _id: string;
+  playerId: string;
+  dynastiesCompleted: number;
+  permanentBonuses: {
+    powerMultiplier: number;
+  };
+  completedAt: Date[];
+}
+
+export interface IPowerBreakdown {
+  basePower: number;
+  armyBonus: number;
+  formationMultiplier: number;
+  generalBonus: number;
+  synergyMultiplier: number;
+  legacyBonus: number;
+  finalPower: number;
 }

@@ -5,7 +5,7 @@ import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/com
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import type { IBattle, IItem } from '@rotg/shared-types';
+import type { IBattle, IItem, IPowerBreakdown, IPlayerInjury, ISynergyPair } from '@rotg/shared-types';
 
 const rarityColors: Record<string, string> = {
   common: 'text-gray-300',
@@ -25,6 +25,10 @@ function DifficultyStars({ level }: { level: number }) {
 interface BattleResult {
   battle: IBattle;
   droppedItem: IItem | null;
+  powerBreakdown: IPowerBreakdown;
+  newInjury: IPlayerInjury | null;
+  moraleChange: number | null;
+  activeSynergies: ISynergyPair[];
 }
 
 export function BattlePage() {
@@ -41,11 +45,16 @@ export function BattlePage() {
     setFighting(true);
     setError(null);
     try {
-      // Brief cosmetic delay for "battle in progress" feel
       await new Promise((r) => setTimeout(r, 800));
-
       const resolved = await fight.mutateAsync({ playerId, templateId });
-      setResult({ battle: resolved.battle, droppedItem: resolved.droppedItem ?? null });
+      setResult({
+        battle: resolved.battle,
+        droppedItem: resolved.droppedItem ?? null,
+        powerBreakdown: resolved.powerBreakdown,
+        newInjury: resolved.newInjury ?? null,
+        moraleChange: resolved.moraleChange ?? null,
+        activeSynergies: resolved.activeSynergies ?? [],
+      });
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Battle failed');
     } finally {
@@ -59,6 +68,7 @@ export function BattlePage() {
 
   const battle = result?.battle;
   const droppedItem = result?.droppedItem;
+  const pb = result?.powerBreakdown;
 
   return (
     <div className="space-y-6">
@@ -123,7 +133,7 @@ export function BattlePage() {
 
       {/* Battle Result Dialog */}
       <Dialog open={!!result} onOpenChange={() => setResult(null)}>
-        <DialogContent>
+        <DialogContent className="max-w-md">
           <DialogHeader>
             <DialogTitle
               className={battle?.status === 'won' ? 'text-green-400' : 'text-red-400'}
@@ -132,7 +142,7 @@ export function BattlePage() {
             </DialogTitle>
           </DialogHeader>
           {battle && (
-            <div className="space-y-4 pt-4">
+            <div className="space-y-4 pt-2">
               <div className="grid grid-cols-3 gap-4 text-center">
                 <div>
                   <p className="text-sm text-muted-foreground">Merit</p>
@@ -147,6 +157,77 @@ export function BattlePage() {
                   <p className="text-xl font-bold">{battle.result.casualties}%</p>
                 </div>
               </div>
+
+              {/* Power Breakdown */}
+              {pb && (
+                <div className="border border-border rounded-lg p-3 text-sm space-y-1">
+                  <p className="font-semibold mb-2">Power Breakdown</p>
+                  <div className="flex justify-between">
+                    <span className="text-muted-foreground">Base Power</span>
+                    <span>{pb.basePower}</span>
+                  </div>
+                  {pb.armyBonus > 0 && (
+                    <div className="flex justify-between">
+                      <span className="text-muted-foreground">Army Bonus</span>
+                      <span>+{pb.armyBonus}</span>
+                    </div>
+                  )}
+                  {pb.formationMultiplier !== 1 && (
+                    <div className="flex justify-between">
+                      <span className="text-muted-foreground">Formation</span>
+                      <span>x{pb.formationMultiplier}</span>
+                    </div>
+                  )}
+                  {pb.generalBonus !== 1 && (
+                    <div className="flex justify-between">
+                      <span className="text-muted-foreground">Generals</span>
+                      <span>x{pb.generalBonus}</span>
+                    </div>
+                  )}
+                  {pb.synergyMultiplier !== 1 && (
+                    <div className="flex justify-between">
+                      <span className="text-muted-foreground">Synergy</span>
+                      <span>x{pb.synergyMultiplier}</span>
+                    </div>
+                  )}
+                  {pb.legacyBonus > 0 && (
+                    <div className="flex justify-between">
+                      <span className="text-muted-foreground">Legacy</span>
+                      <span>+{Math.round(pb.legacyBonus * 100)}%</span>
+                    </div>
+                  )}
+                  <div className="flex justify-between font-bold border-t border-border pt-1 mt-1">
+                    <span>Final Power</span>
+                    <span>{pb.finalPower}</span>
+                  </div>
+                </div>
+              )}
+
+              {/* Active Synergies */}
+              {result?.activeSynergies && result.activeSynergies.length > 0 && (
+                <div className="flex gap-2 flex-wrap">
+                  {result.activeSynergies.map((s) => (
+                    <Badge key={s.name} variant="secondary">
+                      {s.name} (+{Math.round((s.bonusMultiplier - 1) * 100)}%)
+                    </Badge>
+                  ))}
+                </div>
+              )}
+
+              {/* Morale Change */}
+              {result?.moraleChange != null && (
+                <p className={`text-sm ${result.moraleChange > 0 ? 'text-green-400' : 'text-red-400'}`}>
+                  Morale {result.moraleChange > 0 ? '+' : ''}{result.moraleChange}
+                </p>
+              )}
+
+              {/* New Injury */}
+              {result?.newInjury && (
+                <div className="border border-destructive/50 rounded-lg p-3 bg-destructive/5 text-sm">
+                  <p className="font-semibold text-destructive">Injury Sustained!</p>
+                  <p className="capitalize">{result.newInjury.type.replace('_', ' ')} - {result.newInjury.battlesRemaining} battles remaining</p>
+                </div>
+              )}
 
               {droppedItem && (
                 <div className="border border-border rounded-lg p-3 text-center bg-secondary/30">

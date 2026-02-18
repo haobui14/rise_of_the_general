@@ -1,7 +1,58 @@
-import type { IBaseStats, IBattleTemplate, ItemRarity } from '@rotg/shared-types';
+import type { IBaseStats, IBattleTemplate, ItemRarity, IPowerBreakdown, Formation } from '@rotg/shared-types';
+import { getFormationMultiplier, calculateArmyBonus } from '../army/army.engine.js';
 
-export function calculatePlayerPower(stats: IBaseStats, level: number): number {
-  return stats.strength * 2 + stats.defense + stats.strategy * 1.5 + stats.leadership * 2 + level * 1.2;
+export interface BattleContext {
+  stats: IBaseStats;
+  level: number;
+  equippedItemBonuses: Partial<IBaseStats>;
+  injuryPenalties: Partial<IBaseStats>;
+  army: { troopCount: number; morale: number; formation: Formation } | null;
+  generalMultipliers: number[];
+  synergyMultiplier: number;
+  legacyBonusMultiplier: number;
+}
+
+export function calculateFinalPower(ctx: BattleContext): IPowerBreakdown {
+  // Effective stats = base + items + injuries (injuries are negative)
+  const effective: IBaseStats = {
+    strength: ctx.stats.strength + (ctx.equippedItemBonuses.strength ?? 0) + (ctx.injuryPenalties.strength ?? 0),
+    defense: ctx.stats.defense + (ctx.equippedItemBonuses.defense ?? 0) + (ctx.injuryPenalties.defense ?? 0),
+    strategy: ctx.stats.strategy + (ctx.equippedItemBonuses.strategy ?? 0) + (ctx.injuryPenalties.strategy ?? 0),
+    speed: ctx.stats.speed + (ctx.equippedItemBonuses.speed ?? 0) + (ctx.injuryPenalties.speed ?? 0),
+    leadership: ctx.stats.leadership + (ctx.equippedItemBonuses.leadership ?? 0) + (ctx.injuryPenalties.leadership ?? 0),
+  };
+
+  // Floor at 0
+  for (const key of Object.keys(effective) as (keyof IBaseStats)[]) {
+    if (effective[key] < 0) effective[key] = 0;
+  }
+
+  const basePower =
+    effective.strength * 2 + effective.defense + effective.strategy * 1.5 + effective.leadership * 2 + ctx.level * 1.2;
+
+  // Army bonus
+  let armyBonus = 0;
+  let formationMultiplier = 1.0;
+  if (ctx.army) {
+    armyBonus = calculateArmyBonus(ctx.army.troopCount, ctx.army.morale);
+    formationMultiplier = getFormationMultiplier(ctx.army.formation);
+  }
+
+  // Additive stacking of general multipliers: [1.1, 1.15] => 1 + 0.1 + 0.15 = 1.25
+  const generalBonus = ctx.generalMultipliers.reduce((acc, m) => acc + (m - 1), 1.0);
+
+  const finalPower =
+    (basePower + armyBonus) * formationMultiplier * generalBonus * ctx.synergyMultiplier * ctx.legacyBonusMultiplier;
+
+  return {
+    basePower: Math.round(basePower * 100) / 100,
+    armyBonus: Math.round(armyBonus * 100) / 100,
+    formationMultiplier,
+    generalBonus: Math.round(generalBonus * 100) / 100,
+    synergyMultiplier: ctx.synergyMultiplier,
+    legacyBonus: Math.round((ctx.legacyBonusMultiplier - 1) * 100) / 100,
+    finalPower: Math.round(finalPower * 100) / 100,
+  };
 }
 
 export function resolveBattleOutcome(playerPower: number, enemyPower: number): 'won' | 'lost' {
@@ -31,17 +82,6 @@ export function calculateStatGrowth(outcome: 'won' | 'lost'): Partial<IBaseStats
   return { defense: 1 };
 }
 
-/**
- * Determines if an item drops and what rarity, based on battle difficulty.
- *
- * Drop chances by difficulty:
- *   1: 30%  |  2: 40%  |  3: 50%  |  4: 60%  |  5: 75%
- *
- * Rarity weights by difficulty:
- *   1-2: 80% common, 18% rare,  2% epic
- *   3:   50% common, 40% rare, 10% epic
- *   4-5: 20% common, 50% rare, 30% epic
- */
 export function rollItemDrop(difficulty: number): { dropped: boolean; rarity: ItemRarity | null } {
   const dropChances: Record<number, number> = { 1: 0.3, 2: 0.4, 3: 0.5, 4: 0.6, 5: 0.75 };
   const dropChance = dropChances[difficulty] ?? 0.3;

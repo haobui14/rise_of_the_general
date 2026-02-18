@@ -1,5 +1,6 @@
 import { useAuthStore } from '@/stores/authStore';
 import { usePlayer, useRanks, usePromotePlayer } from '@/hooks/usePlayer';
+import { useLegacy, useCompleteDynasty } from '@/hooks/useLegacy';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -10,6 +11,8 @@ export function RankPage() {
   const { data: playerData, isLoading: playerLoading } = usePlayer(playerId);
   const { data: rankData, isLoading: ranksLoading } = useRanks();
   const promote = usePromotePlayer();
+  const { data: legacyData } = useLegacy(playerId);
+  const completeDynasty = useCompleteDynasty(playerId);
 
   if (playerLoading || ranksLoading) {
     return <div className="text-muted-foreground">Loading...</div>;
@@ -89,6 +92,42 @@ export function RankPage() {
             {promote.isError && (
               <p className="text-sm text-destructive text-center">
                 {promote.error instanceof Error ? promote.error.message : 'Promotion failed'}
+              </p>
+            )}
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Dynasty Completion — at tier 7 */}
+      {currentTier >= 7 && (
+        <Card className="border-yellow-500/30 bg-yellow-500/5">
+          <CardHeader>
+            <CardTitle>Complete Dynasty</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-3">
+            <p className="text-sm text-muted-foreground">
+              You've reached the highest rank! Complete your dynasty to earn a permanent +5% power bonus
+              and start a new journey. Your generals and items will be preserved.
+            </p>
+            {legacyData?.legacy && legacyData.legacy.dynastiesCompleted > 0 && (
+              <p className="text-sm">
+                Dynasties completed: {legacyData.legacy.dynastiesCompleted} (current bonus: +{Math.round((legacyData.legacy.permanentBonuses.powerMultiplier - 1) * 100)}%)
+              </p>
+            )}
+            <Button
+              className="w-full"
+              variant="default"
+              onClick={() => completeDynasty.mutate()}
+              disabled={completeDynasty.isPending}
+            >
+              {completeDynasty.isPending ? 'Completing...' : 'Complete Dynasty & Prestige'}
+            </Button>
+            {completeDynasty.isSuccess && (
+              <p className="text-sm text-green-400 text-center">Dynasty completed! Your legacy grows.</p>
+            )}
+            {completeDynasty.isError && (
+              <p className="text-sm text-destructive text-center">
+                {completeDynasty.error instanceof Error ? completeDynasty.error.message : 'Failed'}
               </p>
             )}
           </CardContent>

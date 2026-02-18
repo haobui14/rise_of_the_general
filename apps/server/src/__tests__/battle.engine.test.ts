@@ -1,30 +1,78 @@
 import { describe, it, expect } from 'vitest';
 import {
-  calculatePlayerPower,
+  calculateFinalPower,
   resolveBattleOutcome,
   calculateCasualties,
   calculateRewards,
   calculateStatGrowth,
+  type BattleContext,
 } from '../modules/battle/battle.engine.js';
 
-describe('calculatePlayerPower', () => {
+function makeContext(overrides: Partial<BattleContext> = {}): BattleContext {
+  return {
+    stats: { strength: 10, defense: 10, strategy: 10, speed: 10, leadership: 10 },
+    level: 1,
+    equippedItemBonuses: {},
+    injuryPenalties: {},
+    army: null,
+    generalMultipliers: [],
+    synergyMultiplier: 1.0,
+    legacyBonusMultiplier: 1.0,
+    ...overrides,
+  };
+}
+
+describe('calculateFinalPower', () => {
   it('calculates power correctly with known stats', () => {
-    const stats = { strength: 10, defense: 10, strategy: 10, speed: 10, leadership: 10 };
+    const result = calculateFinalPower(makeContext());
     // (10*2) + 10 + (10*1.5) + (10*2) + (1*1.2) = 20 + 10 + 15 + 20 + 1.2 = 66.2
-    expect(calculatePlayerPower(stats, 1)).toBeCloseTo(66.2);
+    expect(result.basePower).toBeCloseTo(66.2);
+    expect(result.finalPower).toBeCloseTo(66.2);
   });
 
   it('calculates power with zero stats', () => {
-    const stats = { strength: 0, defense: 0, strategy: 0, speed: 0, leadership: 0 };
-    expect(calculatePlayerPower(stats, 0)).toBe(0);
+    const result = calculateFinalPower(makeContext({
+      stats: { strength: 0, defense: 0, strategy: 0, speed: 0, leadership: 0 },
+      level: 0,
+    }));
+    expect(result.finalPower).toBe(0);
   });
 
   it('scales with level', () => {
     const stats = { strength: 5, defense: 5, strategy: 5, speed: 5, leadership: 5 };
-    const powerLevel1 = calculatePlayerPower(stats, 1);
-    const powerLevel10 = calculatePlayerPower(stats, 10);
-    expect(powerLevel10).toBeGreaterThan(powerLevel1);
-    expect(powerLevel10 - powerLevel1).toBeCloseTo(9 * 1.2);
+    const power1 = calculateFinalPower(makeContext({ stats, level: 1 }));
+    const power10 = calculateFinalPower(makeContext({ stats, level: 10 }));
+    expect(power10.finalPower).toBeGreaterThan(power1.finalPower);
+    expect(power10.basePower - power1.basePower).toBeCloseTo(9 * 1.2);
+  });
+
+  it('applies general multipliers additively', () => {
+    const base = calculateFinalPower(makeContext());
+    const withGenerals = calculateFinalPower(makeContext({ generalMultipliers: [1.1, 1.15] }));
+    // 1 + 0.1 + 0.15 = 1.25
+    expect(withGenerals.generalBonus).toBeCloseTo(1.25);
+    expect(withGenerals.finalPower).toBeCloseTo(base.basePower * 1.25, 1);
+  });
+
+  it('applies injury penalties (negative stats)', () => {
+    const result = calculateFinalPower(makeContext({
+      injuryPenalties: { strength: -3, speed: -2 },
+    }));
+    // effective: str=7, def=10, strat=10, spd=8, ldr=10
+    // (7*2) + 10 + (10*1.5) + (10*2) + (1*1.2) = 14 + 10 + 15 + 20 + 1.2 = 60.2
+    expect(result.basePower).toBeCloseTo(60.2);
+  });
+
+  it('applies army bonus and formation multiplier', () => {
+    const result = calculateFinalPower(makeContext({
+      army: { troopCount: 100, morale: 80, formation: 'wedge' },
+    }));
+    // armyBonus = 100 * 1.15 (morale>=80) = 115
+    // formationMult = 1.1
+    // final = (66.2 + 115) * 1.1 = 199.32
+    expect(result.armyBonus).toBeCloseTo(115);
+    expect(result.formationMultiplier).toBe(1.1);
+    expect(result.finalPower).toBeCloseTo(199.32, 0);
   });
 });
 

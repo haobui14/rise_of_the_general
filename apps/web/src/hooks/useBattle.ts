@@ -24,6 +24,8 @@ export function useFight() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['player'] });
       queryClient.invalidateQueries({ queryKey: ['inventory'] });
+      queryClient.invalidateQueries({ queryKey: ['army'] });
+      queryClient.invalidateQueries({ queryKey: ['injuries'] });
     },
   });
 }
