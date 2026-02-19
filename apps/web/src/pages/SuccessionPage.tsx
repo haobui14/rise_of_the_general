@@ -3,6 +3,8 @@ import { useNavigate } from 'react-router-dom';
 import { useAuthStore } from '@/stores/authStore';
 import { useSuccessionState, useConfirmSuccession } from '@/hooks/useSuccession';
 import type { IPlayerCharacter } from '@rotg/shared-types';
+import { GeneralPortrait } from '@/components/canvas/GeneralPortrait';
+import { Button } from '@/components/ui/button';
 
 function CandidateCard({
   character,
@@ -18,18 +20,23 @@ function CandidateCard({
       onClick={onSelect}
       className={`w-full text-left rounded-xl border p-4 space-y-2 transition-all ${
         selected
-          ? 'border-primary bg-primary/5 ring-1 ring-primary'
+          ? 'border-primary bg-primary/10 ring-1 ring-primary shadow-[0_0_12px_rgba(212,160,23,0.15)]'
           : 'border-border bg-card hover:bg-muted/40'
       }`}
     >
-      <div className="flex items-center justify-between">
-        <span className="font-semibold text-sm">{character.name}</span>
-        <span className="text-xs text-muted-foreground capitalize">{character.role}</span>
-      </div>
-      <div className="flex gap-4 text-xs text-muted-foreground">
-        <span>Loyalty {character.loyalty}</span>
-        <span>Ambition {character.ambition}</span>
-        <span>LED {character.stats.leadership}</span>
+      <div className="flex items-center gap-3">
+        <GeneralPortrait name={character.name} size="sm" />
+        <div className="flex-1">
+          <div className="flex items-center justify-between">
+            <span className="font-semibold text-sm font-display">{character.name}</span>
+            <span className="text-xs text-muted-foreground capitalize">{character.role}</span>
+          </div>
+          <div className="flex gap-3 text-xs text-muted-foreground mt-0.5">
+            <span>Loyalty {character.loyalty}</span>
+            <span>Ambition {character.ambition}</span>
+            <span>Leadership {character.stats.leadership}</span>
+          </div>
+        </div>
       </div>
     </button>
   );
@@ -42,18 +49,13 @@ export function SuccessionPage() {
   const confirmSuccession = useConfirmSuccession();
   const [selectedId, setSelectedId] = useState<string | null>(null);
 
-  if (isLoading) return <div className="text-muted-foreground">Loading succession state...</div>;
+  if (isLoading) return <div className="text-muted-foreground animate-pulse font-display">The court gathers…</div>;
 
   if (!data?.pending) {
     return (
       <div className="max-w-lg mx-auto text-center space-y-4 pt-16">
         <p className="text-muted-foreground">No pending succession.</p>
-        <button
-          onClick={() => navigate('/dashboard')}
-          className="px-4 py-2 rounded-md bg-primary text-primary-foreground text-sm"
-        >
-          Back to Dashboard
-        </button>
+        <Button onClick={() => navigate('/dashboard')}>Back to Dashboard</Button>
       </div>
     );
   }
@@ -67,8 +69,8 @@ export function SuccessionPage() {
   return (
     <div className="max-w-2xl mx-auto space-y-6 sm:space-y-8">
       {/* Header */}
-      <div className="rounded-xl border border-destructive/40 bg-destructive/10 p-6 text-center space-y-2">
-        <h1 className="text-xl font-bold text-destructive">A Commander has Fallen</h1>
+      <div className="rounded-xl border border-destructive/60 bg-destructive/10 p-6 text-center space-y-2 shadow-[0_0_20px_rgba(220,38,38,0.1)]">
+        <h1 className="text-xl font-bold text-destructive font-display">A Commander has Fallen</h1>
         <p className="text-sm text-muted-foreground">
           <span className="font-semibold text-foreground">{data.deceasedName}</span> has perished in
           battle. The dynasty must choose a successor.
@@ -98,7 +100,7 @@ export function SuccessionPage() {
 
       {/* Candidate list */}
       <div className="space-y-3">
-        <h2 className="font-semibold">Choose Your Successor</h2>
+        <h2 className="font-semibold font-display">Choose Your Successor</h2>
         {data.candidates.length === 0 ? (
           <div className="rounded-xl border border-dashed border-border p-6 text-center text-sm text-muted-foreground">
             No candidates available. The dynasty faces a crisis — severe penalties apply.
@@ -118,17 +120,18 @@ export function SuccessionPage() {
       </div>
 
       {/* Confirm button */}
-      <button
+      <Button
         onClick={handleConfirm}
         disabled={confirmSuccession.isPending || (data.candidates.length > 0 && !selectedId)}
-        className="w-full py-3 rounded-md bg-primary text-primary-foreground font-medium disabled:opacity-50 transition-opacity"
+        className="w-full"
+        variant="default"
       >
         {confirmSuccession.isPending
-          ? 'Confirming...'
+          ? 'Confirming…'
           : data.candidates.length === 0
             ? 'Accept the Consequences'
             : 'Confirm Succession'}
-      </button>
+      </Button>
 
       {confirmSuccession.isError && (
         <p className="text-destructive text-sm text-center">

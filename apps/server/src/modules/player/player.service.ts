@@ -94,8 +94,14 @@ export async function promotePlayer(id: string) {
   if (!nextRank) throw new NotFoundError('Next rank not found in database');
 
   const eligibility = checkPromotionEligibility(
-    { merit: player.merit, stats: player.stats },
-    { requiredMerit: nextRank.requiredMerit, requiredLeadership: nextRank.requiredLeadership },
+    { merit: player.merit, stats: player.stats, level: player.level, battlesWon: (player as any).battlesWon ?? 0 },
+    {
+      requiredMerit: nextRank.requiredMerit,
+      requiredLeadership: nextRank.requiredLeadership,
+      minBattlesWon: (nextRank as any).minBattlesWon,
+      minLevel: (nextRank as any).minLevel,
+      title: nextRank.title,
+    },
   );
 
   if (!eligibility.eligible) {

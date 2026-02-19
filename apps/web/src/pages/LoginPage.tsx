@@ -5,6 +5,8 @@ import { useLogin } from '@/hooks/usePlayer';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card';
+import { ParticleBackground } from '@/components/canvas/ParticleBackground';
+import { motion } from 'framer-motion';
 
 export function LoginPage() {
   const navigate = useNavigate();
@@ -33,35 +35,41 @@ export function LoginPage() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center p-4">
-      <div className="w-full max-w-md">
+    <div className="min-h-screen flex items-center justify-center p-4 relative overflow-hidden">
+      <ParticleBackground />
+      <motion.div className="w-full max-w-md relative z-10"
+        initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }}>
         <div className="text-center mb-8">
-          <h1 className="text-4xl font-bold text-primary mb-2">Rise of the General</h1>
-          <p className="text-muted-foreground">Return to your kingdom</p>
+          <h1 className="text-4xl font-bold text-primary mb-2 font-display tracking-wide">Rise of the General</h1>
+          <p className="text-muted-foreground">The warring states await your command</p>
         </div>
 
-        <Card>
+        <Card className="border-border/60 bg-card/90 backdrop-blur-sm">
           <CardHeader>
-            <CardTitle>Login</CardTitle>
-            <CardDescription>Enter your warrior name to continue</CardDescription>
+            <CardTitle className="font-display">Enter the Realm</CardTitle>
+            <CardDescription>Speak your name, General</CardDescription>
           </CardHeader>
           <CardContent>
             <form onSubmit={handleSubmit} className="space-y-6">
               <div>
-                <label className="text-sm font-medium mb-2 block">Username</label>
+                <label className="text-sm font-medium mb-2 block">Warrior Name</label>
                 <Input
                   value={username}
                   onChange={(e) => setUsername(e.target.value)}
                   placeholder="Enter your warrior name"
                   minLength={1}
                   required
+                  className="bg-background/60"
                 />
               </div>
 
-              {error && <p className="text-sm text-destructive">{error}</p>}
+              {error && (
+                <motion.p initial={{ opacity: 0 }} animate={{ opacity: 1 }}
+                  className="text-sm text-destructive">{error}</motion.p>
+              )}
 
               <Button type="submit" className="w-full" disabled={login.isPending}>
-                {login.isPending ? 'Logging in...' : 'Enter the Realm'}
+                {login.isPending ? 'Entering…' : 'Enter the Realm'}
               </Button>
 
               <p className="text-center text-sm text-muted-foreground">
@@ -73,7 +81,7 @@ export function LoginPage() {
             </form>
           </CardContent>
         </Card>
-      </div>
+      </motion.div>
     </div>
   );
 }

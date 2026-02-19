@@ -232,6 +232,17 @@ export interface CampaignListResponse {
   campaigns: ICampaign[];
 }
 
+export interface CreateCampaignRequest {
+  playerId: string;
+  name: string;
+  territoriesRequired: number;
+  generalsDefeated: number;
+}
+
+export interface CreateCampaignResponse {
+  campaign: ICampaign;
+}
+
 export interface StartCampaignRequest {
   playerId: string;
   campaignId: string;

@@ -5,6 +5,7 @@ import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
+import { RankInsignia } from '@/components/icons/RankInsignia';
 
 export function RankPage() {
   const playerId = useAuthStore((s) => s.playerId);
@@ -15,7 +16,7 @@ export function RankPage() {
   const completeDynasty = useCompleteDynasty(playerId);
 
   if (playerLoading || ranksLoading) {
-    return <div className="text-muted-foreground">Loading...</div>;
+    return <div className="text-muted-foreground animate-pulse">Consulting the rank scrolls…</div>;
   }
 
   if (!playerData || !rankData) {
@@ -50,15 +51,18 @@ export function RankPage() {
   return (
     <div className="space-y-6">
       <div>
-        <h2 className="text-2xl font-bold">Rank Progression</h2>
+        <h2 className="text-2xl font-bold font-display">Rank Progression</h2>
         <p className="text-muted-foreground">Rise through the military ranks</p>
       </div>
 
       {/* Current rank + promotion */}
       {nextRank && (
-        <Card className="border-primary/30">
+        <Card className="border-primary/30 bg-primary/5">
           <CardHeader>
-            <CardTitle>Next Promotion: {nextRank.title}</CardTitle>
+            <CardTitle className="font-display flex items-center gap-3">
+              <RankInsignia tier={nextRank.tier} size={32} />
+              Next Promotion: {nextRank.title}
+            </CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
             <div>
@@ -137,10 +141,10 @@ export function RankPage() {
       {/* Rank Timeline */}
       <Card>
         <CardHeader>
-          <CardTitle>All Ranks</CardTitle>
+          <CardTitle className="font-display">All Ranks</CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="space-y-3">
+          <div className="space-y-2">
             {ranks.map((rank) => {
               const isCurrent = rank.tier === currentTier;
               const isPast = rank.tier < currentTier;
@@ -151,30 +155,23 @@ export function RankPage() {
                   key={rank._id}
                   className={`flex items-center gap-4 p-3 rounded-lg border transition-colors ${
                     isCurrent
-                      ? 'border-primary bg-primary/10'
+                      ? 'border-primary bg-primary/10 shadow-[0_0_12px_rgba(212,160,23,0.1)]'
                       : isPast
                         ? 'border-border bg-secondary/50 opacity-75'
                         : 'border-border opacity-50'
                   }`}
                 >
-                  <div
-                    className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold ${
-                      isCurrent
-                        ? 'bg-primary text-primary-foreground'
-                        : isPast
-                          ? 'bg-green-600 text-white'
-                          : 'bg-secondary text-muted-foreground'
-                    }`}
-                  >
-                    {isPast ? '✓' : rank.tier}
-                  </div>
+                  <RankInsignia tier={rank.tier} size={32} />
                   <div className="flex-1">
-                    <p className="font-medium">
+                    <p className={`font-medium font-display ${
+                      isCurrent ? 'text-primary' : isPast ? 'text-muted-foreground' : 'text-muted-foreground'
+                    }`}>
                       {rank.title}
                       {isCurrent && (
-                        <Badge variant="default" className="ml-2">
-                          Current
-                        </Badge>
+                        <Badge variant="default" className="ml-2 text-xs">Current</Badge>
+                      )}
+                      {isPast && (
+                        <span className="ml-2 text-xs text-green-400">✓</span>
                       )}
                     </p>
                     <p className="text-xs text-muted-foreground">
@@ -185,9 +182,7 @@ export function RankPage() {
                     </p>
                   </div>
                   {isFuture && (
-                    <Badge variant="outline" className="text-xs">
-                      Locked
-                    </Badge>
+                    <Badge variant="outline" className="text-xs opacity-60">Locked</Badge>
                   )}
                 </div>
               );

@@ -21,4 +21,7 @@ export type LoyaltyEventType =
   | 'battle_defeat'
   | 'promotion'
   | 'betrayal_rumor'
-  | 'idle_decay';
+  | 'idle_decay'
+  | 'great_victory'       // overwhelming rout — powerRatio >= 2.0
+  | 'crushing_defeat'     // catastrophic loss — high casualties on loss
+  | 'general_promoted';   // one of the deployed generals earned a rank

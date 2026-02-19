@@ -21,6 +21,8 @@ export interface PlayerDoc extends Document {
   activeCharacterId?: Types.ObjectId;
   politicalTurns: number;
   successionPending: boolean;
+  /** Total battles won — used for rank promotion eligibility. */
+  battlesWon: number;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -47,6 +49,7 @@ const playerSchema = new Schema<PlayerDoc>(
     activeCharacterId: { type: Schema.Types.ObjectId, ref: 'PlayerCharacter', default: null },
     politicalTurns: { type: Number, default: 3, min: 0 },
     successionPending: { type: Boolean, default: false },
+    battlesWon: { type: Number, default: 0, min: 0 },
   },
   { timestamps: true },
 );

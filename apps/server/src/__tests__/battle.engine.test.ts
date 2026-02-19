@@ -18,6 +18,9 @@ function makeContext(overrides: Partial<BattleContext> = {}): BattleContext {
     generalMultipliers: [],
     synergyMultiplier: 1.0,
     legacyBonusMultiplier: 1.0,
+    warExhaustion: 0,
+    courtPowerModifier: 1.0,
+    troopCounterMultiplier: 1.0,
     ...overrides,
   };
 }
@@ -25,9 +28,9 @@ function makeContext(overrides: Partial<BattleContext> = {}): BattleContext {
 describe('calculateFinalPower', () => {
   it('calculates power correctly with known stats', () => {
     const result = calculateFinalPower(makeContext());
-    // (10*2) + 10 + (10*1.5) + (10*2) + (1*1.2) = 20 + 10 + 15 + 20 + 1.2 = 66.2
-    expect(result.basePower).toBeCloseTo(66.2);
-    expect(result.finalPower).toBeCloseTo(66.2);
+    // (10*2) + 10 + (10*1.5) + (10*1.0) + (10*2) + (1*1.2) = 20+10+15+10+20+1.2 = 76.2
+    expect(result.basePower).toBeCloseTo(76.2);
+    expect(result.finalPower).toBeCloseTo(76.2);
   });
 
   it('calculates power with zero stats', () => {
@@ -59,8 +62,8 @@ describe('calculateFinalPower', () => {
       injuryPenalties: { strength: -3, speed: -2 },
     }));
     // effective: str=7, def=10, strat=10, spd=8, ldr=10
-    // (7*2) + 10 + (10*1.5) + (10*2) + (1*1.2) = 14 + 10 + 15 + 20 + 1.2 = 60.2
-    expect(result.basePower).toBeCloseTo(60.2);
+    // (7*2) + 10 + (10*1.5) + (8*1.0) + (10*2) + (1*1.2) = 14+10+15+8+20+1.2 = 68.2
+    expect(result.basePower).toBeCloseTo(68.2);
   });
 
   it('applies army bonus and formation multiplier', () => {
@@ -69,24 +72,32 @@ describe('calculateFinalPower', () => {
     }));
     // armyBonus = 100 * 1.15 (morale>=80) = 115
     // formationMult = 1.1
-    // final = (66.2 + 115) * 1.1 = 199.32
+    // final = (76.2 + 115) * 1.1 = 210.32
     expect(result.armyBonus).toBeCloseTo(115);
     expect(result.formationMultiplier).toBe(1.1);
-    expect(result.finalPower).toBeCloseTo(199.32, 0);
+    expect(result.finalPower).toBeCloseTo(210.32, 0);
   });
 });
 
 describe('resolveBattleOutcome', () => {
-  it('returns won when playerPower >= enemyPower', () => {
-    expect(resolveBattleOutcome(100, 50)).toBe('won');
+  it('returns won when player has decisive power advantage (variance 1.0)', () => {
+    // 100 * 1.0 = 100 >= 50 → won
+    expect(resolveBattleOutcome(100, 50, 1.0)).toBe('won');
   });
 
-  it('returns won when powers are equal', () => {
-    expect(resolveBattleOutcome(100, 100)).toBe('won');
+  it('returns won with equal powers at neutral variance', () => {
+    // Equal powers, variance=1.0: 100 * 1.0 = 100 >= 100 → won
+    expect(resolveBattleOutcome(100, 100, 1.0)).toBe('won');
   });
 
-  it('returns lost when playerPower < enemyPower', () => {
-    expect(resolveBattleOutcome(50, 100)).toBe('lost');
+  it('returns lost at even powers with bad variance', () => {
+    // Equal powers, variance=0.85: 100 * 0.85 = 85 < 100 → lost
+    expect(resolveBattleOutcome(100, 100, 0.85)).toBe('lost');
+  });
+
+  it('returns lost when heavily outmatched even with best variance', () => {
+    // 50 * 1.15 = 57.5 < 100 → lost
+    expect(resolveBattleOutcome(50, 100, 1.15)).toBe('lost');
   });
 });
 
@@ -122,16 +133,35 @@ describe('calculateRewards', () => {
 });
 
 describe('calculateStatGrowth', () => {
-  it('gives all stat bonuses on win', () => {
-    const growth = calculateStatGrowth('won');
-    expect(growth.strength).toBe(1);
+  it('overwhelming win (powerRatio >= 2.0) grows strategy and leadership', () => {
+    const growth = calculateStatGrowth('won', 10, 200, 50); // ratio = 4.0
+    expect(growth.strategy).toBe(2);
+    expect(growth.leadership).toBe(1);
+    expect(growth.defense).toBeUndefined();
+  });
+
+  it('pyrrhic win (casualties >= 60) grows strength and defense', () => {
+    const growth = calculateStatGrowth('won', 70, 110, 100); // high casualties
+    expect(growth.strength).toBe(2);
     expect(growth.defense).toBe(1);
+  });
+
+  it('clean decisive win (low casualties, powerRatio >= 1.3) grows speed and strategy', () => {
+    const growth = calculateStatGrowth('won', 10, 150, 100); // ratio=1.5, low cas
+    expect(growth.speed).toBe(1);
+    expect(growth.strategy).toBe(1);
+    expect(growth.leadership).toBe(1);
+  });
+
+  it('standard hard-fought win grows strength/strategy/leadership', () => {
+    const growth = calculateStatGrowth('won', 40, 105, 100); // ratio=1.05, mid casualties
+    expect(growth.strength).toBe(1);
     expect(growth.strategy).toBe(1);
     expect(growth.leadership).toBe(1);
   });
 
   it('gives only defense on loss', () => {
-    const growth = calculateStatGrowth('lost');
+    const growth = calculateStatGrowth('lost', 0, 50, 100);
     expect(growth.defense).toBe(1);
     expect(growth.strength).toBeUndefined();
   });

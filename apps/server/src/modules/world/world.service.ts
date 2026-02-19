@@ -128,6 +128,9 @@ export async function attackTerritory(data: { playerId: string; territoryId: str
     generalMultipliers,
     synergyMultiplier,
     legacyBonusMultiplier,
+    warExhaustion: player.warExhaustion,
+    courtPowerModifier: 1.0,     // world map preview — no court lookup needed here
+    troopCounterMultiplier: 1.0, // territory battles use generic enemy forces
   });
 
   // Apply exhaustion penalties to player power

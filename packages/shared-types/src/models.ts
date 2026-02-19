@@ -60,6 +60,10 @@ export interface IRankDefinition {
   maxTroopCommand: number;
   unlockSkills: string[];
   nextRankId: string | null;
+  /** Minimum battles won before promotion is eligible. Kingdom principle: rank through blood. */
+  minBattlesWon?: number;
+  /** Minimum player level required. */
+  minLevel?: number;
 }
 
 export interface ISkill {
@@ -94,6 +98,8 @@ export interface IPlayer {
   activeCharacterId?: string;
   politicalTurns: number;
   successionPending: boolean;
+  /** Total battles won across all campaigns. Used for rank promotion gating. */
+  battlesWon?: number;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -116,6 +122,8 @@ export interface IBattleTemplate {
   enemyPower: number;
   meritReward: number;
   expReward: number;
+  /** Optional: enemy troop type for the troop-counter triangle. */
+  enemyTroopType?: TroopType;
 }
 
 export interface IBattle {

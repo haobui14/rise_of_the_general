@@ -7,6 +7,9 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card';
 import type { FactionListResponse, IFaction } from '@rotg/shared-types';
+import { ParticleBackground } from '@/components/canvas/ParticleBackground';
+import { FactionCrest } from '@/components/icons/FactionCrest';
+import { motion } from 'framer-motion';
 
 export function CreatePlayerPage() {
   const navigate = useNavigate();
@@ -51,28 +54,30 @@ export function CreatePlayerPage() {
   };
 
   const factionColors: Record<string, string> = {
-    Wei: 'border-blue-500 bg-blue-500/10',
-    Shu: 'border-green-500 bg-green-500/10',
-    Wu: 'border-red-500 bg-red-500/10',
+    Wei: 'border-blue-500/70 bg-blue-500/10 shadow-[0_0_12px_rgba(59,130,246,0.15)]',
+    Shu: 'border-green-500/70 bg-green-500/10 shadow-[0_0_12px_rgba(34,197,94,0.15)]',
+    Wu: 'border-red-500/70 bg-red-500/10 shadow-[0_0_12px_rgba(239,68,68,0.15)]',
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center p-4">
-      <div className="w-full max-w-2xl">
+    <div className="min-h-screen flex items-center justify-center p-4 relative overflow-hidden">
+      <ParticleBackground />
+      <motion.div className="w-full max-w-2xl relative z-10"
+        initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }}>
         <div className="text-center mb-8">
-          <h1 className="text-4xl font-bold text-primary mb-2">Rise of the General</h1>
+          <h1 className="text-4xl font-bold text-primary mb-2 font-display tracking-wide">Rise of the General</h1>
           <p className="text-muted-foreground">Begin your journey from peasant to warlord</p>
         </div>
 
-        <Card>
+        <Card className="border-border/60 bg-card/90 backdrop-blur-sm">
           <CardHeader>
-            <CardTitle>Create Your Character</CardTitle>
+            <CardTitle className="font-display">Forge Your Destiny</CardTitle>
             <CardDescription>Choose your name and pledge allegiance to a faction</CardDescription>
           </CardHeader>
           <CardContent>
             <form onSubmit={handleSubmit} className="space-y-6">
               <div>
-                <label className="text-sm font-medium mb-2 block">Username</label>
+                <label className="text-sm font-medium mb-2 block">Warrior Name</label>
                 <Input
                   value={username}
                   onChange={(e) => setUsername(e.target.value)}
@@ -80,11 +85,12 @@ export function CreatePlayerPage() {
                   minLength={3}
                   maxLength={30}
                   required
+                  className="bg-background/60"
                 />
               </div>
 
               <div>
-                <label className="text-sm font-medium mb-3 block">Choose Your Faction</label>
+                <label className="text-sm font-medium mb-3 block">Pledge Allegiance</label>
                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                   {factions.map((faction) => (
                     <button
@@ -97,15 +103,16 @@ export function CreatePlayerPage() {
                           : 'border-border hover:border-muted-foreground'
                       }`}
                     >
-                      <p className="font-bold text-lg">{faction.name}</p>
-                      <p className="text-sm text-muted-foreground mb-2">{faction.leaderName}</p>
+                      <div className="flex items-center gap-2 mb-2">
+                        <FactionCrest faction={faction.name} size={28} />
+                        <p className="font-display font-bold text-base">{faction.name}</p>
+                      </div>
+                      <p className="text-xs text-muted-foreground mb-2">{faction.leaderName}</p>
                       <div className="text-xs space-y-0.5">
                         {Object.entries(faction.baseBonus).map(
                           ([stat, val]) =>
                             val > 0 && (
-                              <p key={stat}>
-                                +{val} {stat}
-                              </p>
+                              <p key={stat} className="text-green-400">+{val} {stat}</p>
                             ),
                         )}
                       </div>
@@ -114,22 +121,23 @@ export function CreatePlayerPage() {
                 </div>
               </div>
 
-              {error && <p className="text-sm text-destructive">{error}</p>}
+              {error && (
+                <motion.p initial={{ opacity: 0 }} animate={{ opacity: 1 }}
+                  className="text-sm text-destructive">{error}</motion.p>
+              )}
 
               <Button type="submit" className="w-full" disabled={register.isPending}>
-                {register.isPending ? 'Creating...' : 'Begin Your Journey'}
+                {register.isPending ? 'Forging your legend…' : 'Begin Your Journey'}
               </Button>
 
               <p className="text-center text-sm text-muted-foreground">
-                Already have a character?{' '}
-                <Link to="/login" className="text-primary hover:underline">
-                  Login
-                </Link>
+                Already a general?{' '}
+                <Link to="/login" className="text-primary hover:underline">Login</Link>
               </p>
             </form>
           </CardContent>
         </Card>
-      </div>
+      </motion.div>
     </div>
   );
 }

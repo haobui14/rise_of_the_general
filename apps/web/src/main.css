@@ -1,3 +1,4 @@
+@import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700;900&display=swap');
 @import "tailwindcss";
 
 :root {
@@ -23,6 +24,25 @@
   --radius: 0.5rem;
   --success: oklch(0.6 0.19 145);
   --success-foreground: oklch(0.985 0 0);
+
+  /* Faction colors */
+  --wei: #3b82f6;
+  --wei-dark: #1e40af;
+  --shu: #22c55e;
+  --shu-dark: #15803d;
+  --wu: #ef4444;
+  --wu-dark: #b91c1c;
+
+  /* Rarity colors */
+  --rarity-common: #9ca3af;
+  --rarity-rare: #60a5fa;
+  --rarity-epic: #a78bfa;
+  --rarity-legendary: #fbbf24;
+  --rarity-mythic: #f59e0b;
+
+  /* Font families */
+  --font-display: 'Cinzel', serif;
+  --font-body: system-ui, -apple-system, sans-serif;
 }
 
 @theme inline {
@@ -51,10 +71,167 @@
   --radius-md: calc(var(--radius) - 2px);
   --radius-lg: var(--radius);
   --radius-xl: calc(var(--radius) + 4px);
+  --font-display: var(--font-display);
 }
 
 body {
   background-color: var(--background);
   color: var(--foreground);
-  font-family: system-ui, -apple-system, sans-serif;
+  font-family: var(--font-body);
+}
+
+/* Subtle background noise texture */
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: -1;
+  opacity: 0.03;
+  background-image:
+    radial-gradient(circle at 25% 25%, rgba(255,255,255,0.1) 1px, transparent 1px),
+    radial-gradient(circle at 75% 75%, rgba(255,255,255,0.08) 1px, transparent 1px);
+  background-size: 50px 50px, 30px 30px;
+}
+
+/* Display font utility */
+.font-display {
+  font-family: 'Cinzel', serif;
+}
+
+/* ── Custom Animations ── */
+
+@keyframes shimmer {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+
+@keyframes float {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-6px); }
+}
+
+@keyframes glow-pulse {
+  0%, 100% { box-shadow: 0 0 8px 2px currentColor; opacity: 0.6; }
+  50% { box-shadow: 0 0 20px 6px currentColor; opacity: 1; }
+}
+
+@keyframes fade-in-up {
+  from { opacity: 0; transform: translateY(12px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes ember-drift {
+  0% { opacity: 0; transform: translateY(0) scale(0.5); }
+  20% { opacity: 1; }
+  100% { opacity: 0; transform: translateY(-120px) translateX(30px) scale(0); }
+}
+
+@keyframes border-glow {
+  0%, 100% { border-color: rgba(251,191,36,0.3); }
+  50% { border-color: rgba(251,191,36,0.7); }
+}
+
+@keyframes pulse-ring {
+  0% { transform: scale(1); opacity: 0.6; }
+  100% { transform: scale(1.4); opacity: 0; }
+}
+
+.animate-shimmer {
+  background: linear-gradient(90deg, transparent 30%, rgba(255,255,255,0.08) 50%, transparent 70%);
+  background-size: 200% 100%;
+  animation: shimmer 2s ease-in-out infinite;
+}
+
+.animate-float {
+  animation: float 3s ease-in-out infinite;
+}
+
+.animate-glow-pulse {
+  animation: glow-pulse 2s ease-in-out infinite;
+}
+
+.animate-fade-in-up {
+  animation: fade-in-up 0.4s ease-out both;
+}
+
+.animate-border-glow {
+  animation: border-glow 2s ease-in-out infinite;
+}
+
+/* ── Faction-themed card borders ── */
+
+.card-wei {
+  border-color: rgba(59, 130, 246, 0.3);
+  background: linear-gradient(135deg, rgba(59, 130, 246, 0.05) 0%, transparent 60%);
+}
+
+.card-shu {
+  border-color: rgba(34, 197, 94, 0.3);
+  background: linear-gradient(135deg, rgba(34, 197, 94, 0.05) 0%, transparent 60%);
+}
+
+.card-wu {
+  border-color: rgba(239, 68, 68, 0.3);
+  background: linear-gradient(135deg, rgba(239, 68, 68, 0.05) 0%, transparent 60%);
+}
+
+/* ── Rarity glow borders ── */
+
+.rarity-common { border-color: rgba(156, 163, 175, 0.4); }
+.rarity-rare { border-color: rgba(96, 165, 250, 0.5); box-shadow: 0 0 8px rgba(96, 165, 250, 0.15); }
+.rarity-epic { border-color: rgba(167, 139, 250, 0.5); box-shadow: 0 0 10px rgba(167, 139, 250, 0.2); }
+.rarity-legendary { border-color: rgba(251, 191, 36, 0.5); box-shadow: 0 0 12px rgba(251, 191, 36, 0.25); }
+.rarity-mythic { border-color: rgba(245, 158, 11, 0.6); box-shadow: 0 0 16px rgba(245, 158, 11, 0.3); }
+
+/* ── Parchment / scroll style ── */
+
+.parchment {
+  background: linear-gradient(135deg, oklch(0.22 0.01 60) 0%, oklch(0.18 0.005 50) 100%);
+  border: 1px solid oklch(0.35 0.03 50);
+}
+
+/* ── Golden shimmer text ── */
+
+.text-golden {
+  background: linear-gradient(135deg, #fbbf24, #f59e0b, #d97706, #fbbf24);
+  background-size: 300% 300%;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  animation: shimmer 3s ease-in-out infinite;
+}
+
+/* ── Circular gauge SVG styles ── */
+
+.gauge-track {
+  fill: none;
+  stroke: oklch(0.269 0 0);
+  stroke-width: 6;
+}
+
+.gauge-fill {
+  fill: none;
+  stroke-width: 6;
+  stroke-linecap: round;
+  transition: stroke-dashoffset 0.6s ease-out;
+}
+
+/* ── Scrollbar styling ── */
+
+::-webkit-scrollbar {
+  width: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: oklch(0.35 0 0);
+  border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: oklch(0.45 0 0);
 }

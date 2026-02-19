@@ -19,12 +19,18 @@ import { PlayerInjury } from '../injury/injury.model.js';
 import { PlayerLegacy } from '../dynasty/legacy.model.js';
 import { PlayerCharacter } from '../character/character.model.js';
 import { CourtState } from '../politics/court.model.js';
+import { calculateBattlePowerModifier } from '../politics/court.engine.js';
 import { calculateSynergyBonus } from '../general/synergy.engine.js';
 import { rollInjury, sumInjuryPenalties } from '../injury/injury.engine.js';
+import { getTroopCounterMultiplier } from '../army/army.engine.js';
 import { gainRelationshipFromBattle } from '../general/general.service.js';
 import { applyLoyaltyEvent } from '../loyalty/loyalty.service.js';
+import {
+  checkBetrayalCondition,
+  calculateBetrayalConsequence,
+} from '../loyalty/loyalty.engine.js';
 import { NotFoundError } from '../../utils/errors.js';
-import type { IBaseStats, Formation } from '@rotg/shared-types';
+import type { IBaseStats, Formation, TroopType } from '@rotg/shared-types';
 
 export async function listTemplates() {
   const templates = await BattleTemplate.find().sort({ difficulty: 1 });
@@ -109,6 +115,24 @@ export async function startAndResolveBattle(data: { playerId: string; templateId
   }
 
   // --- Calculate power ---
+
+  // Court state — fetched early because it modifies battle power
+  const court = await CourtState.findOne({ dynastyId: player.dynastyId });
+  const courtPowerModifier = court
+    ? calculateBattlePowerModifier({
+        stability: court.stability,
+        legitimacy: court.legitimacy,
+        morale: court.morale,
+        corruption: court.corruption,
+      })
+    : 1.0;
+
+  // Troop counter multiplier — player army vs enemy troop type
+  const troopCounterMultiplier = getTroopCounterMultiplier(
+    (army?.troopType ?? null) as TroopType | null,
+    ((template as any).enemyTroopType ?? null) as TroopType | null,
+  );
+
   const ctx: BattleContext = {
     stats: player.stats,
     level: player.level,
@@ -120,6 +144,9 @@ export async function startAndResolveBattle(data: { playerId: string; templateId
     generalMultipliers,
     synergyMultiplier,
     legacyBonusMultiplier,
+    warExhaustion: player.warExhaustion,
+    courtPowerModifier,
+    troopCounterMultiplier,
   };
 
   const powerBreakdown = calculateFinalPower(ctx);
@@ -132,9 +159,7 @@ export async function startAndResolveBattle(data: { playerId: string; templateId
 
   const baseRewards = calculateRewards(template, outcome);
 
-  // Court effects — load dynasty's political court and apply active modifiers
-  const court = await CourtState.findOne({ dynastyId: player.dynastyId });
-  // High morale (>70) → +5% merit; low stability (<40) → +5 exhaustion on loss; high corruption (>70) → −25% gold
+  // Court reward modifiers (separate from power modifier above)
   const courtMoraleBonus = court && court.morale > 70 ? 1.05 : 1.0;
   const courtExhaustionPenalty = court && court.stability < 40 && outcome === 'lost' ? 5 : 0;
   const goldMultiplier = court && court.corruption > 70 ? 0.75 : 1.0;
@@ -143,7 +168,10 @@ export async function startAndResolveBattle(data: { playerId: string; templateId
     meritGained: Math.round(baseRewards.meritGained * courtMoraleBonus),
     expGained: Math.floor(baseRewards.expGained * exhaustionPenalties.xpMultiplier),
   };
-  const statGrowth = calculateStatGrowth(outcome);
+
+  // Context-sensitive stat growth — how you fight shapes who you become
+  const powerRatio = powerBreakdown.finalPower / Math.max(1, template.enemyPower);
+  const statGrowth = calculateStatGrowth(outcome, casualties, powerBreakdown.finalPower, template.enemyPower);
 
   // Create resolved battle record
   const battle = await Battle.create({
@@ -175,6 +203,11 @@ export async function startAndResolveBattle(data: { playerId: string; templateId
   if (statGrowth.speed) player.stats.speed += statGrowth.speed;
   if (statGrowth.leadership) player.stats.leadership += statGrowth.leadership;
 
+  // Track total battles won — required for rank promotion (Kingdom: rank through battle)
+  if (outcome === 'won') {
+    player.battlesWon = (player.battlesWon ?? 0) + 1;
+  }
+
   // Level up check
   const levelThreshold = player.level * 100;
   if (player.experience >= levelThreshold) {
@@ -203,13 +236,56 @@ export async function startAndResolveBattle(data: { playerId: string; templateId
     );
   }
 
-  // Loyalty event for officer characters
-  await applyLoyaltyEvent(
-    data.playerId,
-    outcome === 'won' ? 'battle_victory' : 'battle_defeat',
-  ).catch(() => {
+  // Loyalty event for officer characters — granular based on battle quality
+  const isGreatVictory = outcome === 'won' && powerRatio >= 2.0;
+  const isCrushingDefeat = outcome === 'lost' && casualties >= 60;
+  const loyaltyEventType = isGreatVictory
+    ? 'great_victory'
+    : isCrushingDefeat
+      ? 'crushing_defeat'
+      : outcome === 'won'
+        ? 'battle_victory'
+        : 'battle_defeat';
+
+  await applyLoyaltyEvent(data.playerId, loyaltyEventType).catch(() => {
     /* no characters yet is fine */
   });
+
+  // Post-battle betrayal check — Kingdom manga: crushing defeats break loyal hearts
+  let betrayalEvent: { characterName: string; stabilityDelta: number; moraleDelta: number; meritDelta: number; message: string } | null = null;
+  if (outcome === 'lost' || isCrushingDefeat) {
+    try {
+      const characters = await PlayerCharacter.find({
+        playerId: data.playerId,
+        isAlive: true,
+        role: { $in: ['officer', 'advisor'] },
+      });
+      for (const char of characters) {
+        if (checkBetrayalCondition({ loyalty: char.loyalty, ambition: char.ambition })) {
+          const consequence = calculateBetrayalConsequence({
+            loyalty: char.loyalty,
+            ambition: char.ambition,
+            name: char.name,
+          });
+          // Mark character as no longer loyal (set loyalty to 0, remove from active service)
+          char.loyalty = 0;
+          await char.save();
+          // Apply court consequences if court exists
+          if (court) {
+            court.stability = Math.max(0, court.stability + consequence.stabilityDelta);
+            court.morale = Math.max(0, court.morale + consequence.moraleDelta);
+            await court.save();
+          }
+          player.merit = Math.max(0, player.merit + consequence.meritDelta);
+          await player.save();
+          betrayalEvent = { characterName: char.name, ...consequence };
+          break; // One betrayal per battle — don't cascade
+        }
+      }
+    } catch {
+      /* no characters is fine */
+    }
+  }
 
   // Expire injuries (decrement battlesRemaining)
   if (activeInjuries.length > 0) {
@@ -265,5 +341,9 @@ export async function startAndResolveBattle(data: { playerId: string; templateId
     moraleChange,
     activeSynergies,
     exhaustionChange: exhaustionDelta,
+    courtPowerModifier,
+    troopCounterMultiplier,
+    betrayalEvent,
+    statGrowth,
   };
 }

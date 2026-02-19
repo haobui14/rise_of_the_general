@@ -2,6 +2,8 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { fetchApi } from '@/lib/api';
 import type {
   CampaignListResponse,
+  CreateCampaignRequest,
+  CreateCampaignResponse,
   StartCampaignRequest,
   StartCampaignResponse,
   PlayerCampaignResponse,
@@ -27,6 +29,20 @@ export function usePlayerCampaign(playerId: string | null) {
       }
     },
     enabled: !!playerId,
+  });
+}
+
+export function useCreateCampaign() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (data: CreateCampaignRequest) =>
+      fetchApi<CreateCampaignResponse>('/campaigns', {
+        method: 'POST',
+        body: JSON.stringify(data),
+      }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['campaigns'] });
+    },
   });
 }
 

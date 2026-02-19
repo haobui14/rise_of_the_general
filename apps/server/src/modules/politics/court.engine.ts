@@ -76,3 +76,31 @@ export function calculatePassiveDecay(court: CourtSnapshot): CourtSnapshot {
     corruption: clamp(court.corruption + 1),
   };
 }
+
+/**
+ * Calculate how court conditions modify battle power.
+ *
+ * Kingdom manga principle — a fractured court produces fractured armies.
+ * High morale inspires soldiers; instability and corruption sap their will.
+ *
+ * Returns a multiplier in range [0.85, 1.10].
+ */
+export function calculateBattlePowerModifier(court: CourtSnapshot): number {
+  let modifier = 1.0;
+
+  // Morale effects
+  if (court.morale >= 80) modifier += 0.10;       // Inspired troops  +10%
+  else if (court.morale >= 60) modifier += 0.04;  // Good morale      +4%
+  else if (court.morale < 30) modifier -= 0.10;   // Broken morale    -10%
+  else if (court.morale < 45) modifier -= 0.05;   // Low morale       -5%
+
+  // Stability effects
+  if (court.stability < 30) modifier -= 0.08;     // Civil unrest     -8%
+  else if (court.stability >= 75) modifier += 0.03; // Solid foundation +3%
+
+  // Corruption penalty — soldiers know when gold meant for them disappears
+  if (court.corruption > 70) modifier -= 0.07;    // Rampant corruption -7%
+  else if (court.corruption > 50) modifier -= 0.03; // Notable corruption -3%
+
+  return Math.max(0.75, Math.min(1.10, modifier));
+}

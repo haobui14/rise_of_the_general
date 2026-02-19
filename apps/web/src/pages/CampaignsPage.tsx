@@ -1,11 +1,12 @@
 import { useState } from 'react';
 import { useAuthStore } from '@/stores/authStore';
-import { useCampaigns, usePlayerCampaign, useStartCampaign } from '@/hooks/useCampaigns';
+import { useCampaigns, usePlayerCampaign, useStartCampaign, useCreateCampaign } from '@/hooks/useCampaigns';
 import { useGenerateCampaign } from '@/hooks/useAiContent';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
 import type { CampaignDraftResponse } from '@rotg/shared-types';
+import { motion } from 'framer-motion';
 
 const statusColors: Record<string, string> = {
   active: 'bg-green-500/20 text-green-300 border-green-500',
@@ -19,8 +20,14 @@ export function CampaignsPage() {
   const { data: activeData } = usePlayerCampaign(playerId);
   const startMutation = useStartCampaign();
   const generateCampaign = useGenerateCampaign();
+  const createCampaign = useCreateCampaign();
   const [aiDraft, setAiDraft] = useState<CampaignDraftResponse | null>(null);
   const [aiError, setAiError] = useState<string | null>(null);
+  const [showForm, setShowForm] = useState(false);
+  const [formName, setFormName] = useState('');
+  const [formTerritories, setFormTerritories] = useState(3);
+  const [formGenerals, setFormGenerals] = useState(1);
+  const [createError, setCreateError] = useState<string | null>(null);
 
   function handleGenerateCampaign() {
     if (!playerId) return;
@@ -35,7 +42,32 @@ export function CampaignsPage() {
     );
   }
 
-  if (loadingCampaigns) return <div className="text-muted-foreground">Loading campaigns...</div>;
+  function handleUseDraft(draft: CampaignDraftResponse) {
+    setFormName(draft.name);
+    setFormTerritories(Math.max(1, draft.estimatedDifficulty * 2));
+    setFormGenerals(Math.max(0, draft.estimatedDifficulty));
+    setShowForm(true);
+  }
+
+  function handleCreate(e: React.FormEvent) {
+    e.preventDefault();
+    if (!playerId) return;
+    setCreateError(null);
+    createCampaign.mutate(
+      { playerId, name: formName, territoriesRequired: formTerritories, generalsDefeated: formGenerals },
+      {
+        onSuccess: () => {
+          setShowForm(false);
+          setFormName('');
+          setFormTerritories(3);
+          setFormGenerals(1);
+        },
+        onError: (err: any) => setCreateError(err?.message ?? 'Failed to create campaign.'),
+      },
+    );
+  }
+
+  if (loadingCampaigns) return <div className="text-muted-foreground animate-pulse">Summoning the war councils…</div>;
   if (!campaignsData) return <div className="text-destructive">Failed to load campaigns</div>;
 
   const active = activeData?.playerCampaign;
@@ -50,17 +82,86 @@ export function CampaignsPage() {
     <div className="space-y-6">
       <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-3">
         <div>
-          <h2 className="text-2xl font-bold">Campaigns</h2>
+          <h2 className="text-2xl font-bold font-display">Campaigns</h2>
           <p className="text-muted-foreground">Embark on multi-stage military campaigns</p>
         </div>
-        <button
-          onClick={handleGenerateCampaign}
-          disabled={generateCampaign.isPending}
-          className="sm:shrink-0 rounded-md border border-primary/40 px-3 py-2 text-sm text-primary hover:bg-primary/10 transition-colors disabled:opacity-40"
-        >
-          {generateCampaign.isPending ? 'Generating…' : '✨ AI Campaign Idea'}
-        </button>
+        <div className="flex flex-wrap gap-2">
+          <button
+            onClick={() => setShowForm((v) => !v)}
+            className="rounded-md border border-border px-3 py-2 text-sm hover:bg-muted transition-colors"
+          >
+            {showForm ? 'Cancel' : '+ New Campaign'}
+          </button>
+          <button
+            onClick={handleGenerateCampaign}
+            disabled={generateCampaign.isPending}
+            className="rounded-md border border-primary/40 px-3 py-2 text-sm text-primary hover:bg-primary/10 transition-colors disabled:opacity-40"
+          >
+            {generateCampaign.isPending ? 'Generating…' : '✨ AI Campaign Idea'}
+          </button>
+        </div>
       </div>
+
+      {/* New Campaign Form */}
+      {showForm && (
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-base">Create New Campaign</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <form onSubmit={handleCreate} className="space-y-4">
+              <div>
+                <label className="text-sm font-medium mb-1 block">Campaign Name</label>
+                <input
+                  type="text"
+                  value={formName}
+                  onChange={(e) => setFormName(e.target.value)}
+                  placeholder="e.g. The Southern Campaign"
+                  required
+                  maxLength={80}
+                  className="w-full rounded-md border border-border bg-background px-3 py-2 text-sm"
+                />
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="text-sm font-medium mb-1 block">Territories Required</label>
+                  <input
+                    type="number"
+                    value={formTerritories}
+                    onChange={(e) => setFormTerritories(Math.max(1, Number(e.target.value)))}
+                    min={1}
+                    max={50}
+                    required
+                    className="w-full rounded-md border border-border bg-background px-3 py-2 text-sm"
+                  />
+                </div>
+                <div>
+                  <label className="text-sm font-medium mb-1 block">Generals to Defeat</label>
+                  <input
+                    type="number"
+                    value={formGenerals}
+                    onChange={(e) => setFormGenerals(Math.max(0, Number(e.target.value)))}
+                    min={0}
+                    max={50}
+                    required
+                    className="w-full rounded-md border border-border bg-background px-3 py-2 text-sm"
+                  />
+                </div>
+              </div>
+              {createError && (
+                <p className="text-sm text-destructive">{createError}</p>
+              )}
+              <button
+                type="submit"
+                disabled={createCampaign.isPending || !formName.trim()}
+                className="w-full rounded-md bg-primary/90 hover:bg-primary text-primary-foreground text-sm py-2 transition-colors disabled:opacity-50"
+              >
+                {createCampaign.isPending ? 'Creating…' : 'Create Campaign'}
+              </button>
+            </form>
+          </CardContent>
+        </Card>
+      )}
 
       {/* AI Draft */}
       {aiDraft && (
@@ -79,6 +180,12 @@ export function CampaignsPage() {
               ))}
             </ul>
           )}
+          <button
+            onClick={() => handleUseDraft(aiDraft)}
+            className="mt-1 rounded-md border border-primary/40 px-3 py-1.5 text-xs text-primary hover:bg-primary/10 transition-colors"
+          >
+            Use This Draft
+          </button>
         </div>
       )}
 

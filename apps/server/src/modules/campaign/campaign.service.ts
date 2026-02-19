@@ -4,6 +4,35 @@ import { Player } from '../player/player.model.js';
 import { Territory } from '../world/territory.model.js';
 import { NotFoundError, ValidationError } from '../../utils/errors.js';
 
+export async function createCampaign(data: {
+  playerId: string;
+  name: string;
+  territoriesRequired: number;
+  generalsDefeated: number;
+}) {
+  const player = await Player.findById(data.playerId);
+  if (!player) throw new NotFoundError('Player not found');
+
+  const existing = await Campaign.findOne({ name: data.name.trim() });
+  if (existing) throw new ValidationError('A campaign with that name already exists');
+
+  // Use any available territory as the placeholder starting point
+  const anyTerritory = await Territory.findOne();
+  if (!anyTerritory) throw new ValidationError('No territories found — run the seed script first');
+
+  const campaign = await Campaign.create({
+    name: data.name.trim(),
+    dynastyId: player.dynastyId,
+    startingTerritoryId: anyTerritory._id,
+    victoryConditions: {
+      territoriesRequired: data.territoriesRequired,
+      generalsDefeated: data.generalsDefeated,
+    },
+  });
+
+  return { campaign };
+}
+
 export async function listCampaigns() {
   const campaigns = await Campaign.find().sort({ name: 1 });
   return { campaigns };

@@ -8,6 +8,8 @@ import {
 } from '@/hooks/useCharacters';
 import { useGenerateOfficer } from '@/hooks/useAiContent';
 import type { IPlayerCharacter } from '@rotg/shared-types';
+import { GeneralPortrait } from '@/components/canvas/GeneralPortrait';
+import { motion } from 'framer-motion';
 
 function StatBar({ label, value }: { label: string; value: number }) {
   return (
@@ -56,25 +58,24 @@ function CharacterCard({
   };
 
   return (
-    <div
+    <motion.div whileHover={{ y: -2 }} transition={{ duration: 0.15 }}
       className={`rounded-xl border p-4 space-y-3 transition-colors ${
-        isActive ? 'border-primary bg-primary/5' : 'border-border bg-card'
+        isActive ? 'border-primary bg-primary/5 shadow-[0_0_12px_rgba(212,160,23,0.08)]' : 'border-border bg-card'
       }`}
     >
-      <div className="flex items-center justify-between">
-        <div>
-          <h3 className="font-semibold text-sm">{character.name}</h3>
-          <span
-            className={`text-xs px-2 py-0.5 rounded-full font-medium ${roleBadgeColor[character.role] ?? 'bg-slate-500/20 text-slate-400'}`}
-          >
+      <div className="flex items-start gap-3">
+        <GeneralPortrait name={character.name} size="sm" />
+        <div className="flex-1">
+          <div className="flex items-center justify-between">
+            <h3 className="font-semibold text-sm font-display">{character.name}</h3>
+            {isActive && (
+              <span className="text-xs text-primary font-medium px-2 py-0.5 bg-primary/10 rounded-full">Commander</span>
+            )}
+          </div>
+          <span className={`text-xs px-2 py-0.5 rounded-full font-medium mt-0.5 inline-block ${roleBadgeColor[character.role] ?? 'bg-slate-500/20 text-slate-400'}`}>
             {character.role}
           </span>
         </div>
-        {isActive && (
-          <span className="text-xs text-primary font-medium px-2 py-0.5 bg-primary/10 rounded-full">
-            Commander
-          </span>
-        )}
       </div>
 
       <div className="space-y-1">
@@ -108,7 +109,7 @@ function CharacterCard({
           </button>
         )}
       </div>
-    </div>
+    </motion.div>
   );
 }
 
@@ -125,7 +126,7 @@ export function CharactersPage() {
   const [aiDraft, setAiDraft] = useState<{ name: string; backstory: string } | null>(null);
   const [aiError, setAiError] = useState<string | null>(null);
 
-  if (isLoading) return <div className="text-muted-foreground">Loading characters...</div>;
+  if (isLoading) return <div className="text-muted-foreground animate-pulse">Gathering your officers…</div>;
   if (error) return <div className="text-destructive">Failed to load characters.</div>;
 
   const characters = data?.characters ?? [];
@@ -159,7 +160,7 @@ export function CharactersPage() {
   return (
     <div className="max-w-5xl mx-auto space-y-8">
       <div>
-        <h1 className="text-2xl font-bold">Officers & Characters</h1>
+        <h1 className="text-2xl font-bold font-display">Officers & Characters</h1>
         <p className="text-muted-foreground text-sm mt-1">
           The <strong>active commander</strong>'s stats add a bonus in every battle (×0.2 weight on
           all stats). On dynasty completion they retire and the designated <strong>Heir</strong>{' '}

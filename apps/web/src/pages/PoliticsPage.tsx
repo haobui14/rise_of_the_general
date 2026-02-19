@@ -3,6 +3,7 @@ import { useAuthStore } from '@/stores/authStore';
 import { useCourtState, useCourtAction } from '@/hooks/usePolitics';
 import { useGenerateNarrative } from '@/hooks/useAiContent';
 import type { CourtActionType } from '@rotg/shared-types';
+import { motion } from 'framer-motion';
 
 function CourtBar({
   label,
@@ -17,13 +18,11 @@ function CourtBar({
     <div className="space-y-1">
       <div className="flex justify-between text-xs text-muted-foreground">
         <span>{label}</span>
-        <span>{value}/100</span>
+        <span className="font-mono">{value}/100</span>
       </div>
       <div className="h-2 bg-muted rounded-full overflow-hidden">
-        <div
-          className={`h-full ${color} rounded-full transition-all`}
-          style={{ width: `${value}%` }}
-        />
+        <motion.div className={`h-full ${color} rounded-full`}
+          initial={{ width: 0 }} animate={{ width: `${value}%` }} transition={{ duration: 0.7, ease: 'easeOut' }} />
       </div>
     </div>
   );
@@ -83,7 +82,7 @@ export function PoliticsPage() {
     );
   }
 
-  if (isLoading) return <div className="text-muted-foreground">Loading court state...</div>;
+  if (isLoading) return <div className="text-muted-foreground animate-pulse">Consulting the court…</div>;
   if (error) return <div className="text-destructive">Failed to load court data.</div>;
 
   const court = data?.court;
@@ -116,7 +115,7 @@ export function PoliticsPage() {
     <div className="max-w-2xl mx-auto space-y-8">
       <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-3">
         <div>
-          <h1 className="text-2xl font-bold">Political Court</h1>
+          <h1 className="text-2xl font-bold font-display">Political Court</h1>
           <p className="text-sm text-muted-foreground mt-1">
             Manage the dynasty's internal politics. You have{' '}
             <span
@@ -138,10 +137,11 @@ export function PoliticsPage() {
 
       {/* AI Court Event */}
       {courtEvent && (
-        <div className="rounded-xl border border-amber-500/30 bg-amber-500/5 p-4">
-          <p className="text-xs font-medium text-amber-400 mb-1">📜 Court Dispatch</p>
+        <motion.div initial={{ opacity: 0, y: -6 }} animate={{ opacity: 1, y: 0 }}
+          className="rounded-xl border border-amber-500/40 bg-amber-500/5 p-5 shadow-[0_0_16px_rgba(245,158,11,0.08)]">
+          <p className="text-xs font-medium text-amber-400 mb-2">📜 Court Dispatch</p>
           <p className="text-sm text-muted-foreground italic leading-relaxed">{courtEvent}</p>
-        </div>
+        </motion.div>
       )}
       {eventError && (
         <div className="rounded-lg border border-destructive/40 bg-destructive/10 px-4 py-3 text-sm text-destructive">
@@ -151,8 +151,8 @@ export function PoliticsPage() {
 
       {/* Court bars */}
       {court && (
-        <div className="rounded-xl border border-border bg-card p-6 space-y-4">
-          <h2 className="font-semibold text-sm">Court Status</h2>
+        <div className="rounded-xl border border-border/60 bg-card p-6 space-y-4">
+          <h2 className="font-semibold text-sm font-display">Court Status</h2>
           <CourtBar label="Stability" value={court.stability} color="bg-blue-500" />
           <CourtBar label="Legitimacy" value={court.legitimacy} color="bg-amber-500" />
           <CourtBar label="Morale" value={court.morale} color="bg-green-500" />
@@ -214,18 +214,17 @@ export function PoliticsPage() {
 
       {/* Actions */}
       <div className="space-y-3">
-        <h2 className="font-semibold">Take Action</h2>
+        <h2 className="font-semibold font-display">Take Action</h2>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
           {ACTIONS.map(({ action, label, description }) => (
-            <button
-              key={action}
+            <motion.button key={action} whileHover={{ y: -1 }} transition={{ duration: 0.12 }}
               onClick={() => handleAction(action)}
               disabled={turnsLeft <= 0 || courtAction.isPending}
-              className="rounded-xl border border-border bg-card p-4 text-left hover:bg-muted/40 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+              className="rounded-xl border border-border/60 bg-card p-4 text-left hover:bg-muted/40 hover:border-primary/30 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
             >
-              <p className="font-medium text-sm">{label}</p>
+              <p className="font-medium text-sm font-display">{label}</p>
               <p className="text-xs text-muted-foreground mt-1">{description}</p>
-            </button>
+            </motion.button>
           ))}
         </div>
 

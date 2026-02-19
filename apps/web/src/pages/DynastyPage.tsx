@@ -7,6 +7,7 @@ import { useTimeline } from '@/hooks/useTimeline';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
+import { motion } from 'framer-motion';
 
 const strategyActions = [
   {
@@ -79,7 +80,7 @@ export function DynastyPage() {
     );
   }
 
-  if (isLoading) return <div className="text-muted-foreground">Loading dynasty state...</div>;
+  if (isLoading) return <div className="text-muted-foreground animate-pulse">Consulting the war chronicles…</div>;
 
   const state = dynastyData?.dynastyState;
   const player = playerData?.player;
@@ -107,7 +108,7 @@ export function DynastyPage() {
     <div className="space-y-6">
       <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-3">
         <div>
-          <h2 className="text-2xl font-bold">Dynasty &amp; Strategy</h2>
+          <h2 className="text-2xl font-bold font-display">Dynasty &amp; Strategy</h2>
           <p className="text-muted-foreground">
             Manage your war effort and the dynasty's stability
           </p>
@@ -141,7 +142,7 @@ export function DynastyPage() {
         {/* War Exhaustion */}
         <Card>
           <CardHeader>
-            <CardTitle className="flex items-center justify-between">
+            <CardTitle className="flex items-center justify-between font-display">
               War Exhaustion
               <Badge
                 variant="outline"
@@ -159,7 +160,7 @@ export function DynastyPage() {
           </CardHeader>
           <CardContent className="space-y-3">
             <div className="flex items-end gap-2">
-              <span className={`text-3xl font-bold ${exhaustionColor}`}>{warExhaustion}</span>
+              <span className={`text-3xl font-bold font-display ${exhaustionColor}`}>{warExhaustion}</span>
               <span className="text-muted-foreground text-sm mb-1">/ 100</span>
             </div>
             <Progress
