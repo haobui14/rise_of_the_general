@@ -2,6 +2,7 @@ import type { CharacterRole } from '@rotg/shared-types';
 import { PlayerCharacter } from './character.model.js';
 import { Player } from '../player/player.model.js';
 import { NotFoundError, ConflictError } from '../../utils/errors.js';
+import { rollInitialDestiny } from '../destiny/destiny.engine.js';
 
 export async function listCharacters(playerId: string) {
   const player = await Player.findById(playerId);
@@ -17,6 +18,10 @@ export async function listCharacters(playerId: string) {
       role: c.role,
       loyalty: c.loyalty,
       ambition: c.ambition,
+      morality: c.morality,
+      moralFractures: c.moralFractures,
+      destiny: c.destiny,
+      destinyRevealed: c.destinyRevealed,
       stats: c.stats,
       isAlive: c.isAlive,
       createdAt: c.createdAt,
@@ -39,7 +44,7 @@ export async function createCharacter(
     if (existing) throw new ConflictError('A main character already exists');
   }
 
-  const character = await PlayerCharacter.create({ playerId, name, role });
+  const character = await PlayerCharacter.create({ playerId, name, role, destiny: rollInitialDestiny() });
 
   return {
     character: {
@@ -49,6 +54,10 @@ export async function createCharacter(
       role: character.role,
       loyalty: character.loyalty,
       ambition: character.ambition,
+      morality: character.morality,
+      moralFractures: character.moralFractures,
+      destiny: character.destiny,
+      destinyRevealed: character.destinyRevealed,
       stats: character.stats,
       isAlive: character.isAlive,
       createdAt: character.createdAt,
@@ -75,6 +84,10 @@ export async function setActiveCharacter(playerId: string, characterId: string) 
       role: character.role,
       loyalty: character.loyalty,
       ambition: character.ambition,
+      morality: character.morality,
+      moralFractures: character.moralFractures,
+      destiny: character.destiny,
+      destinyRevealed: character.destinyRevealed,
       stats: character.stats,
       isAlive: character.isAlive,
       createdAt: character.createdAt,
@@ -106,6 +119,10 @@ export async function promoteToHeir(playerId: string, characterId: string) {
       role: character.role,
       loyalty: character.loyalty,
       ambition: character.ambition,
+      morality: character.morality,
+      moralFractures: character.moralFractures,
+      destiny: character.destiny,
+      destinyRevealed: character.destinyRevealed,
       stats: character.stats,
       isAlive: character.isAlive,
       createdAt: character.createdAt,

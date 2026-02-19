@@ -10,3 +10,12 @@ export const createPlayerSchema = z.object({
 export const playerIdParamSchema = z.object({
   id: z.string().regex(objectIdRegex, 'Invalid player ID'),
 });
+
+export const toggleRomanceModeSchema = z.object({
+  romanceMode: z.boolean(),
+});
+
+
+export const playerIdNamedParamSchema = z.object({
+  playerId: z.string().regex(objectIdRegex, 'Invalid player ID'),
+});

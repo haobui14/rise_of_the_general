@@ -23,6 +23,9 @@ import type {
   IDynastyState,
   IPlayerCharacter,
   ICourtState,
+  IOmen,
+  IBrotherhood,
+  IDuel,
 } from './models.js';
 
 import type {
@@ -32,6 +35,7 @@ import type {
   AiAction,
   CharacterRole,
   CourtActionType,
+  DuelTriggerType,
 } from './enums.js';
 
 // Auth
@@ -55,6 +59,14 @@ export interface PlayerResponse {
   rank: IRankDefinition;
   faction: IFaction;
   effectiveStats: IBaseStats;
+}
+
+export interface ToggleRomanceModeRequest {
+  romanceMode: boolean;
+}
+
+export interface ToggleRomanceModeResponse {
+  player: IPlayer;
 }
 
 export interface PromotePlayerResponse {
@@ -458,4 +470,65 @@ export interface SpawnAllGeneralsResponse {
   spawned: number;
   skipped: number;
   results: Array<{ territoryName: string; generalName: string; lore: string | null }>;
+}
+
+
+// Phase 5
+export interface OmenListResponse {
+  omens: IOmen[];
+}
+
+export interface TriggerOmenResponse {
+  omen: IOmen;
+}
+
+export interface ResolveOmenResponse {
+  omen: IOmen;
+}
+
+export interface BrotherhoodListResponse {
+  brotherhoods: IBrotherhood[];
+}
+
+export interface CreateBrotherhoodRequest {
+  name: string;
+  memberCharacterIds: string[];
+}
+
+export interface CreateBrotherhoodResponse {
+  brotherhood: IBrotherhood;
+}
+
+export interface UpdateBrotherhoodMembersRequest {
+  characterId: string;
+}
+
+export interface BrotherhoodResponse {
+  brotherhood: IBrotherhood;
+}
+
+export interface ChallengeDuelRequest {
+  playerId: string;
+  challengerCharacterId: string;
+  opponentName: string;
+  opponentStats: {
+    strength: number;
+    defense: number;
+    strategy: number;
+    speed: number;
+    leadership: number;
+  };
+  trigger: DuelTriggerType;
+}
+
+export interface ChallengeDuelResponse {
+  duel: IDuel;
+}
+
+export interface DuelListResponse {
+  duels: IDuel[];
+}
+
+export interface DuelResponse {
+  duel: IDuel;
 }

@@ -40,3 +40,21 @@ export type CampaignDraft = z.infer<typeof campaignDraftSchema>;
 export type OfficerDraft = z.infer<typeof officerDraftSchema>;
 export type EnemyGeneralDraft = z.infer<typeof enemyGeneralDraftSchema>;
 export type EventDraft = z.infer<typeof eventDraftSchema>;
+
+
+export const oathNarrationSchema = z.object({
+  text: z.string().min(1).max(600),
+});
+
+export const duelNarrationSchema = z.object({
+  text: z.string().min(1).max(600),
+});
+
+export const omenNarrationSchema = z.object({
+  title: z.string().min(1).max(100),
+  description: z.string().min(1).max(500),
+});
+
+export const legendNarrationSchema = z.object({
+  text: z.string().min(1).max(700),
+});

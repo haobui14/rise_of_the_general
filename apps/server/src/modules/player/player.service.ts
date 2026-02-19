@@ -115,3 +115,13 @@ export async function promotePlayer(id: string) {
 
   return { player, newRank: nextRank, unlockedSkills };
 }
+
+export async function toggleRomanceMode(playerId: string, romanceMode: boolean) {
+  const player = await Player.findById(playerId);
+  if (!player) throw new NotFoundError('Player not found');
+
+  player.romanceMode = romanceMode;
+  await player.save();
+
+  return { player };
+}

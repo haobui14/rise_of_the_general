@@ -1,5 +1,5 @@
 import mongoose, { Schema, type Document, type Types } from 'mongoose';
-import type { CharacterRole } from '@rotg/shared-types';
+import type { CharacterRole, DestinyType, MoralFractureType } from '@rotg/shared-types';
 
 export interface CharacterDoc extends Document {
   playerId: Types.ObjectId;
@@ -7,6 +7,14 @@ export interface CharacterDoc extends Document {
   role: CharacterRole;
   loyalty: number;
   ambition: number;
+  morality: {
+    benevolence: number;
+    righteousness: number;
+    moralAmbition: number;
+  };
+  moralFractures: MoralFractureType[];
+  destiny: DestinyType;
+  destinyRevealed: boolean;
   stats: {
     strength: number;
     defense: number;
@@ -29,6 +37,14 @@ const characterSchema = new Schema<CharacterDoc>(
     },
     loyalty: { type: Number, default: 70, min: 0, max: 100 },
     ambition: { type: Number, default: 50, min: 0, max: 100 },
+    morality: {
+      benevolence: { type: Number, default: 50, min: 0, max: 100 },
+      righteousness: { type: Number, default: 50, min: 0, max: 100 },
+      moralAmbition: { type: Number, default: 50, min: 0, max: 100 },
+    },
+    moralFractures: { type: [String], default: [] },
+    destiny: { type: String, enum: ['heaven-favored', 'doomed', 'unknown'], default: 'unknown' },
+    destinyRevealed: { type: Boolean, default: false },
     stats: {
       strength: { type: Number, default: 5 },
       defense: { type: Number, default: 5 },

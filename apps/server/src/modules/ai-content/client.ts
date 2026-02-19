@@ -18,7 +18,11 @@ export type AiFeatureFlag =
   | 'AI_NARRATIVE'
   | 'AI_EVENTS'
   | 'AI_OFFICERS'
-  | 'AI_GENERALS';
+  | 'AI_GENERALS'
+  | 'AI_OATHS'
+  | 'AI_DUELS'
+  | 'AI_OMENS'
+  | 'AI_LEGENDS';
 
 export function isAiEnabled(flag: AiFeatureFlag): boolean {
   return process.env[flag] === 'true';
