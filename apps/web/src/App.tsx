@@ -14,6 +14,8 @@ import { DynastyPage } from './pages/DynastyPage';
 import { CharactersPage } from './pages/CharactersPage';
 import { SuccessionPage } from './pages/SuccessionPage';
 import { PoliticsPage } from './pages/PoliticsPage';
+import { BrotherhoodPage } from './pages/BrotherhoodPage';
+import { DuelPage } from './pages/DuelPage';
 
 export function App() {
   return (
@@ -33,6 +35,8 @@ export function App() {
         <Route path="/characters" element={<CharactersPage />} />
         <Route path="/succession" element={<SuccessionPage />} />
         <Route path="/politics" element={<PoliticsPage />} />
+        <Route path="/brotherhood" element={<BrotherhoodPage />} />
+        <Route path="/duel" element={<DuelPage />} />
       </Route>
       <Route path="*" element={<Navigate to="/dashboard" replace />} />
     </Routes>

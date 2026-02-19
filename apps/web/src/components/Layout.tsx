@@ -17,6 +17,7 @@ import {
   UserCheck,
   Menu,
   X,
+  Handshake,
 } from 'lucide-react';
 import { AuthGuard } from './AuthGuard';
 import { FactionCrest } from '@/components/icons/FactionCrest';
@@ -31,6 +32,8 @@ const navItems = [
   { to: '/dynasty', label: 'Dynasty', icon: Crown },
   { to: '/characters', label: 'Characters', icon: UserCheck },
   { to: '/politics', label: 'Politics', icon: Scale },
+  { to: '/brotherhood', label: 'Brotherhood', icon: Handshake },
+  { to: '/duel', label: 'Duel', icon: Swords },
   { to: '/rank', label: 'Rank', icon: Medal },
   { to: '/generals', label: 'Generals', icon: Users },
   { to: '/army', label: 'Army', icon: Shield },

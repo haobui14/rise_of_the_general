@@ -18,6 +18,7 @@ export interface PlayerDoc extends Document {
   };
   isAlive: boolean;
   warExhaustion: number;
+  romanceMode: boolean;
   activeCharacterId?: Types.ObjectId;
   politicalTurns: number;
   successionPending: boolean;
@@ -46,6 +47,7 @@ const playerSchema = new Schema<PlayerDoc>(
     },
     isAlive: { type: Boolean, default: true },
     warExhaustion: { type: Number, default: 0, min: 0, max: 100 },
+    romanceMode: { type: Boolean, default: false },
     activeCharacterId: { type: Schema.Types.ObjectId, ref: 'PlayerCharacter', default: null },
     politicalTurns: { type: Number, default: 3, min: 0 },
     successionPending: { type: Boolean, default: false },

@@ -25,6 +25,8 @@ import { rollInjury, sumInjuryPenalties } from '../injury/injury.engine.js';
 import { getTroopCounterMultiplier } from '../army/army.engine.js';
 import { gainRelationshipFromBattle } from '../general/general.service.js';
 import { applyLoyaltyEvent } from '../loyalty/loyalty.service.js';
+import { Brotherhood } from '../brotherhood/brotherhood.model.js';
+import { calculateBrotherhoodPowerBonus } from '../brotherhood/brotherhood.engine.js';
 import {
   checkBetrayalCondition,
   calculateBetrayalConsequence,
@@ -133,6 +135,16 @@ export async function startAndResolveBattle(data: { playerId: string; templateId
     ((template as any).enemyTroopType ?? null) as TroopType | null,
   );
 
+  let brotherhoodBonus = 1.0;
+  if (player.romanceMode) {
+    const activeCharacterIds = [player.activeCharacterId, ...(slots?.activeGeneralIds ?? []).map((g: any) => g._id)].filter(Boolean).map((x: any) => x.toString());
+    const brotherhoods = await Brotherhood.find({ playerId: data.playerId });
+    for (const b of brotherhoods) {
+      const membersInBattle = b.memberCharacterIds.filter((id) => activeCharacterIds.includes(id.toString())).length;
+      brotherhoodBonus = Math.max(brotherhoodBonus, calculateBrotherhoodPowerBonus(b.bondLevel, membersInBattle));
+    }
+  }
+
   const ctx: BattleContext = {
     stats: player.stats,
     level: player.level,
@@ -144,6 +156,7 @@ export async function startAndResolveBattle(data: { playerId: string; templateId
     generalMultipliers,
     synergyMultiplier,
     legacyBonusMultiplier,
+    brotherhoodBonus,
     warExhaustion: player.warExhaustion,
     courtPowerModifier,
     troopCounterMultiplier,

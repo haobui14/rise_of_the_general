@@ -27,6 +27,9 @@ import { successionRoutes } from './modules/succession/succession.routes.js';
 import { politicsRoutes } from './modules/politics/court.routes.js';
 import { timelineRoutes } from './modules/timeline/timeline.routes.js';
 import { aiContentRoutes } from './modules/ai-content/ai-content.routes.js';
+import { duelRoutes } from './modules/duel/duel.routes.js';
+import { brotherhoodRoutes } from './modules/brotherhood/brotherhood.routes.js';
+import { omenRoutes } from './modules/omen/omen.routes.js';
 
 export async function buildApp(opts: { logger?: boolean } = {}) {
   const app = Fastify({ logger: opts.logger ?? true });
@@ -75,6 +78,11 @@ export async function buildApp(opts: { logger?: boolean } = {}) {
   await app.register(politicsRoutes);
   await app.register(timelineRoutes);
   await app.register(aiContentRoutes);
+
+  // Phase 5 routes
+  await app.register(omenRoutes);
+  await app.register(brotherhoodRoutes);
+  await app.register(duelRoutes);
 
   return app;
 }

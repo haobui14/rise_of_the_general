@@ -10,6 +10,7 @@ export interface BattleContext {
   generalMultipliers: number[];
   synergyMultiplier: number;
   legacyBonusMultiplier: number;
+  brotherhoodBonus?: number;
   /** Current war exhaustion (0–100). High values unlock desperation bonus. */
   warExhaustion: number;
   /** Battle power modifier from court state (morale/stability). Default 1.0. */
@@ -63,6 +64,7 @@ export function calculateFinalPower(ctx: BattleContext): IPowerBreakdown {
     generalBonus *
     ctx.synergyMultiplier *
     ctx.legacyBonusMultiplier *
+    (ctx.brotherhoodBonus ?? 1) *
     ctx.courtPowerModifier *
     ctx.troopCounterMultiplier *
     desperationMultiplier;
@@ -74,6 +76,7 @@ export function calculateFinalPower(ctx: BattleContext): IPowerBreakdown {
     generalBonus: Math.round(generalBonus * 100) / 100,
     synergyMultiplier: ctx.synergyMultiplier,
     legacyBonus: Math.round((ctx.legacyBonusMultiplier - 1) * 100) / 100,
+    brotherhoodBonus: Math.round(((ctx.brotherhoodBonus ?? 1) - 1) * 100) / 100,
     finalPower: Math.round(finalPower * 100) / 100,
   };
 }

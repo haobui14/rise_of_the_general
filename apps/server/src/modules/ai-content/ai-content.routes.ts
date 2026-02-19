@@ -6,6 +6,10 @@ import {
   generateOfficer,
   spawnAiEnemyGeneral,
   spawnAllGenerals,
+  generateOathNarration,
+  generateDuelNarration,
+  generateOmenNarration,
+  generateLegendNarration,
 } from './ai-content.service.js';
 
 const objectIdRegex = /^[0-9a-fA-F]{24}$/;
@@ -27,6 +31,36 @@ const generateOfficerSchema = z.object({
 });
 
 export const aiContentRoutes: FastifyPluginAsync = async (fastify) => {
+
+  const romanceSchema = z.object({ context: z.string().min(1).max(400) });
+
+  fastify.post('/api/ai-content/generate-oath-narration', { preHandler: [fastify.authenticate] }, async (request, reply) => {
+    const { context } = romanceSchema.parse(request.body);
+    const text = await generateOathNarration(context);
+    if (!text) return reply.code(503).send({ message: 'AI oath generation unavailable' });
+    return { text };
+  });
+
+  fastify.post('/api/ai-content/generate-duel-narration', { preHandler: [fastify.authenticate] }, async (request, reply) => {
+    const { context } = romanceSchema.parse(request.body);
+    const text = await generateDuelNarration(context);
+    if (!text) return reply.code(503).send({ message: 'AI duel generation unavailable' });
+    return { text };
+  });
+
+  fastify.post('/api/ai-content/generate-omen', { preHandler: [fastify.authenticate] }, async (request, reply) => {
+    const { context } = romanceSchema.parse(request.body);
+    const omen = await generateOmenNarration(context);
+    if (!omen) return reply.code(503).send({ message: 'AI omen generation unavailable' });
+    return omen;
+  });
+
+  fastify.post('/api/ai-content/generate-legend', { preHandler: [fastify.authenticate] }, async (request, reply) => {
+    const { context } = romanceSchema.parse(request.body);
+    const text = await generateLegendNarration(context);
+    if (!text) return reply.code(503).send({ message: 'AI legend generation unavailable' });
+    return { text };
+  });
   // POST /api/ai-content/generate-campaign
   fastify.post(
     '/api/ai-content/generate-campaign',

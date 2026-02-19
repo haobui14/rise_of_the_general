@@ -8,11 +8,14 @@ import type { LoyaltyEventType } from '@rotg/shared-types';
 
 describe('calculateLoyaltyDelta', () => {
   const cases: Array<[LoyaltyEventType, number]> = [
-    ['battle_victory', 5],
+    ['battle_victory', 8],
     ['battle_defeat', -8],
-    ['promotion', 10],
+    ['promotion', 12],
     ['betrayal_rumor', -15],
-    ['idle_decay', -2],
+    ['idle_decay', -4],
+    ['great_victory', 18],
+    ['crushing_defeat', -18],
+    ['general_promoted', 10],
   ];
 
   for (const [event, expected] of cases) {

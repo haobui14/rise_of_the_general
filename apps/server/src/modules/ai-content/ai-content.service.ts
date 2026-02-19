@@ -193,3 +193,28 @@ export async function spawnAllGenerals(): Promise<{
 
   return { spawned, skipped, results };
 }
+
+
+export async function generateOathNarration(context: string): Promise<string | null> {
+  if (!isAiEnabled('AI_OATHS')) return null;
+  return callAi(`Write a Romance of the Three Kingdoms style oath narration in 4-6 lines. Context: ${context}`, { maxTokens: 220, temperature: 0.9 });
+}
+
+export async function generateDuelNarration(context: string): Promise<string | null> {
+  if (!isAiEnabled('AI_DUELS')) return null;
+  return callAi(`Write cinematic duel narration with vivid action and honor themes. Context: ${context}`, { maxTokens: 220, temperature: 0.9 });
+}
+
+export async function generateOmenNarration(context: string): Promise<{ title: string; description: string } | null> {
+  if (!isAiEnabled('AI_OMENS')) return null;
+  const raw = await callAi(`Return JSON with title and description for an omen in Three Kingdoms style. Context: ${context}`, { maxTokens: 180 });
+  if (!raw) return null;
+  const parsed = tryParseJson(raw) as any;
+  if (!parsed?.title || !parsed?.description) return null;
+  return { title: String(parsed.title), description: String(parsed.description) };
+}
+
+export async function generateLegendNarration(context: string): Promise<string | null> {
+  if (!isAiEnabled('AI_LEGENDS')) return null;
+  return callAi(`Write a legend chronicle entry praising a general's feat. Context: ${context}`, { maxTokens: 260, temperature: 0.85 });
+}

@@ -32,10 +32,10 @@ const errorHandlerPlugin: FastifyPluginAsync = async (fastify) => {
       });
     }
 
-    if (err.name === 'ConflictError') {
-      return reply.code(409).send({
-        statusCode: 409,
-        error: 'Conflict',
+    if (err.name === 'ForbiddenError') {
+      return reply.code(403).send({
+        statusCode: 403,
+        error: 'Forbidden',
         message: err.message,
       });
     }

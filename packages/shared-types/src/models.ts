@@ -11,6 +11,11 @@ import type {
   CharacterRole,
   TimelineType,
   CourtActionType,
+  MoralFractureType,
+  DestinyType,
+  OmenType,
+  DuelTriggerType,
+  DuelOutcome,
 } from './enums.js';
 
 export interface IBaseStats {
@@ -80,6 +85,13 @@ export interface IItem {
   type: ItemType;
   rarity: ItemRarity;
   statBonus: Partial<IBaseStats>;
+  isMythic?: boolean;
+  boundToCharacterId?: string | null;
+  duelBonus?: {
+    strengthMultiplier: number;
+    destinyInteraction?: 'heaven-favored' | 'doomed' | 'neutral';
+  };
+  lore?: string;
 }
 
 export interface IPlayer {
@@ -95,6 +107,7 @@ export interface IPlayer {
   stats: IBaseStats;
   isAlive: boolean;
   warExhaustion: number;
+  romanceMode: boolean;
   activeCharacterId?: string;
   politicalTurns: number;
   successionPending: boolean;
@@ -212,6 +225,7 @@ export interface IPowerBreakdown {
   generalBonus: number;
   synergyMultiplier: number;
   legacyBonus: number;
+  brotherhoodBonus?: number;
   finalPower: number;
 }
 
@@ -285,6 +299,14 @@ export interface IPlayerCharacter {
   role: CharacterRole;
   loyalty: number; // 0–100
   ambition: number; // 0–100
+  morality?: {
+    benevolence: number;
+    righteousness: number;
+    moralAmbition: number;
+  };
+  moralFractures?: MoralFractureType[];
+  destiny?: DestinyType;
+  destinyRevealed?: boolean;
   stats: IBaseStats;
   isAlive: boolean;
   createdAt: Date;
@@ -299,4 +321,53 @@ export interface ICourtState {
   corruption: number; // 0–100
   lastActionType: CourtActionType | null;
   updatedAt: Date;
+}
+
+
+export interface IOmen {
+  _id: string;
+  dynastyId: string;
+  type: OmenType;
+  title: string;
+  description: string;
+  effect: {
+    stabilityDelta: number;
+    moraleDelta: number;
+    destinyRevealCharacterId?: string;
+  };
+  resolved: boolean;
+  createdAt: Date;
+}
+
+export interface IBrotherhood {
+  _id: string;
+  playerId: string;
+  name: string;
+  memberCharacterIds: string[];
+  bondLevel: number;
+  bondExperience: number;
+  jointSkillUnlocked: boolean;
+  createdAt: Date;
+}
+
+export interface IDuelRound {
+  round: number;
+  challengerPower: number;
+  opponentPower: number;
+  winner: 'challenger' | 'opponent' | 'draw';
+}
+
+export interface IDuel {
+  _id: string;
+  playerId: string;
+  challengerCharacterId: string;
+  opponentName: string;
+  opponentStats: IBaseStats;
+  trigger: DuelTriggerType;
+  outcome: DuelOutcome;
+  rounds: IDuelRound[];
+  rewardMerit: number;
+  rewardExp: number;
+  narration?: string;
+  createdAt: Date;
 }

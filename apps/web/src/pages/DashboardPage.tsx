@@ -4,6 +4,7 @@ import { useArmy } from '@/hooks/useArmy';
 import { useInjuries } from '@/hooks/useInjuries';
 import { useLegacy } from '@/hooks/useLegacy';
 import { useCharacters } from '@/hooks/useCharacters';
+import { useToggleRomanceMode } from '@/hooks/useRomance';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
 import { Badge } from '@/components/ui/badge';
@@ -26,6 +27,7 @@ export function DashboardPage() {
   const { data: injuryData } = useInjuries(playerId);
   const { data: legacyData } = useLegacy(playerId);
   const { data: charData } = useCharacters(playerId);
+  const toggleRomance = useToggleRomanceMode(playerId);
 
   if (isLoading) {
     return <div className="text-muted-foreground animate-pulse font-display">Summoning your record…</div>;
@@ -137,6 +139,10 @@ export function DashboardPage() {
             </div>
             <div className="text-sm text-muted-foreground space-y-1">
               <p>Joined: {new Date(player.createdAt).toLocaleDateString()}</p>
+              <p>Romance Mode: <span className={player.romanceMode ? 'text-primary' : ''}>{player.romanceMode ? 'Enabled' : 'Disabled'}</span></p>
+              <button className="mt-1 text-xs px-2 py-1 rounded border" onClick={() => toggleRomance.mutate(!player.romanceMode)}>
+                Toggle Romance
+              </button>
             </div>
             <div className="mt-3">
               <div className="flex justify-between text-xs text-muted-foreground mb-1">
